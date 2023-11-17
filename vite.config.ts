@@ -18,5 +18,20 @@ export default defineConfig({
 	],
 	optimizeDeps: {
 		include: ['schart.js']
+	},
+	server:{
+		port: 2020,
+		proxy:{
+			'/api': {
+				target: 'http://localhost:1010',
+				changeOrigin : true,
+				secure : false,
+				ws: true,
+				rewrite: path => path.replace(/^\/api/, '')
+
+			}
+		}
 	}
-});
+}
+);
+

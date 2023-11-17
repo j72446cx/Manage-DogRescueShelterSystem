@@ -5,14 +5,14 @@
 			<el-icon v-if="sidebar.collapse"><Expand /></el-icon>
 			<el-icon v-else><Fold /></el-icon>
 		</div>
-		<div class="logo">后台管理系统</div>
+		<div class="logo">Working Space</div>
 		<div class="header-right">
 			<div class="header-user-con">
 				<!-- 消息中心 -->
 				<div class="btn-bell" @click="router.push('/tabs')">
 					<el-tooltip
 						effect="dark"
-						:content="message ? `有${message}条未读消息` : `消息中心`"
+						:content="message ? `You have ${message} unread messages` : `Message Center`"
 						placement="bottom"
 					>
 						<i class="el-icon-lx-notice"></i>
@@ -32,10 +32,10 @@
 					<template #dropdown>
 						<el-dropdown-menu>
 							<a href="https://github.com/lin-xin/vue-manage-system" target="_blank">
-								<el-dropdown-item>项目仓库</el-dropdown-item>
+								<el-dropdown-item>Github repo</el-dropdown-item>
 							</a>
-							<el-dropdown-item command="user">个人中心</el-dropdown-item>
-							<el-dropdown-item divided command="loginout">退出登录</el-dropdown-item>
+							<el-dropdown-item command="user">Personal Information</el-dropdown-item>
+							<el-dropdown-item divided command="loginout">Logout</el-dropdown-item>
 						</el-dropdown-menu>
 					</template>
 				</el-dropdown>

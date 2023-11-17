@@ -2,6 +2,8 @@
 	<div>
 		<el-row :gutter="20">
 			<el-col :span="8">
+
+
 				<el-card shadow="hover" class="mgb20" style="height: 252px">
 					<div class="user-info">
 						<el-avatar :size="120" :src="imgurl" />
@@ -11,18 +13,21 @@
 						</div>
 					</div>
 					<div class="user-info-list">
-						上次登录时间：
+						Last login time：
 						<span>2022-10-01</span>
 					</div>
 					<div class="user-info-list">
-						上次登录地点：
-						<span>东莞</span>
+						Last login location：
+						<span>Manchester</span>
 					</div>
 				</el-card>
+
+
+
 				<el-card shadow="hover" style="height: 252px">
 					<template #header>
 						<div class="clearfix">
-							<span>语言详情</span>
+							<span>Language</span>
 						</div>
 					</template>
 					Vue
@@ -35,6 +40,10 @@
 					<el-progress :percentage="1" color="#f56c6c"></el-progress>
 				</el-card>
 			</el-col>
+
+
+
+
 			<el-col :span="16">
 				<el-row :gutter="20" class="mgb20">
 					<el-col :span="8">
@@ -43,7 +52,7 @@
 								<el-icon class="grid-con-icon"><User /></el-icon>
 								<div class="grid-cont-right">
 									<div class="grid-num">1234</div>
-									<div>用户访问量</div>
+									<div>Responsible Dogs</div>
 								</div>
 							</div>
 						</el-card>
@@ -54,7 +63,7 @@
 								<el-icon class="grid-con-icon"><ChatDotRound /></el-icon>
 								<div class="grid-cont-right">
 									<div class="grid-num">321</div>
-									<div>系统消息</div>
+									<div>System Information</div>
 								</div>
 							</div>
 						</el-card>
@@ -62,20 +71,24 @@
 					<el-col :span="8">
 						<el-card shadow="hover" :body-style="{ padding: '0px' }">
 							<div class="grid-content grid-con-3">
-								<el-icon class="grid-con-icon"><Goods /></el-icon>
+								<el-icon class="grid-con-icon"><Notification /></el-icon>
 								<div class="grid-cont-right">
 									<div class="grid-num">5000</div>
-									<div>商品数量</div>
+									<div>Tasks Left Today</div>
 								</div>
 							</div>
 						</el-card>
 					</el-col>
 				</el-row>
+
+
+
+
 				<el-card shadow="hover" style="height: 403px">
 					<template #header>
 						<div class="clearfix">
-							<span>待办事项</span>
-							<el-button style="float: right; padding: 3px 0" text>添加</el-button>
+							<span>Daily Schedule</span>
+							<el-button style="float: right; padding: 3px 0" text>Add</el-button>
 						</div>
 					</template>
 
@@ -101,18 +114,20 @@
 				</el-card>
 			</el-col>
 		</el-row>
-		<el-row :gutter="20">
-			<el-col :span="12">
-				<el-card shadow="hover">
-					<schart ref="bar" class="schart" canvasId="bar" :options="options"></schart>
-				</el-card>
-			</el-col>
-			<el-col :span="12">
-				<el-card shadow="hover">
-					<schart ref="line" class="schart" canvasId="line" :options="options2"></schart>
-				</el-card>
-			</el-col>
-		</el-row>
+
+
+<!--		<el-row :gutter="20">-->
+<!--			<el-col :span="12">-->
+<!--				<el-card shadow="hover">-->
+<!--					<schart ref="bar" class="schart" canvasId="bar" :options="options"></schart>-->
+<!--				</el-card>-->
+<!--			</el-col>-->
+<!--			<el-col :span="12">-->
+<!--				<el-card shadow="hover">-->
+<!--					<schart ref="line" class="schart" canvasId="line" :options="options2"></schart>-->
+<!--				</el-card>-->
+<!--			</el-col>-->
+<!--		</el-row>-->
 	</div>
 </template>
 
@@ -122,76 +137,16 @@ import { reactive } from 'vue';
 import imgurl from '../assets/img/img.jpg';
 
 const name = localStorage.getItem('ms_username');
-const role: string = name === 'admin' ? '超级管理员' : '普通用户';
+const role: string = name === 'admin' ? 'Super admin' : 'Staff';
 
-const options = {
-	type: 'bar',
-	title: {
-		text: '最近一周各品类销售图'
-	},
-	xRorate: 25,
-	labels: ['周一', '周二', '周三', '周四', '周五'],
-	datasets: [
-		{
-			label: '家电',
-			data: [234, 278, 270, 190, 230]
-		},
-		{
-			label: '百货',
-			data: [164, 178, 190, 135, 160]
-		},
-		{
-			label: '食品',
-			data: [144, 198, 150, 235, 120]
-		}
-	]
-};
-const options2 = {
-	type: 'line',
-	title: {
-		text: '最近几个月各品类销售趋势图'
-	},
-	labels: ['6月', '7月', '8月', '9月', '10月'],
-	datasets: [
-		{
-			label: '家电',
-			data: [234, 278, 270, 190, 230]
-		},
-		{
-			label: '百货',
-			data: [164, 178, 150, 135, 160]
-		},
-		{
-			label: '食品',
-			data: [74, 118, 200, 235, 90]
-		}
-	]
-};
 const todoList = reactive([
 	{
-		title: '今天要修复100个bug',
+		title: 'Feeding dogs',
 		status: false
 	},
 	{
-		title: '今天要修复100个bug',
-		status: false
-	},
-	{
-		title: '今天要写100行代码加几个bug吧',
-		status: false
-	},
-	{
-		title: '今天要修复100个bug',
-		status: false
-	},
-	{
-		title: '今天要修复100个bug',
-		status: true
-	},
-	{
-		title: '今天要写100行代码加几个bug吧',
-		status: true
-	}
+		title: 'Make schedule for grooming',
+		status: true}
 ]);
 </script>
 

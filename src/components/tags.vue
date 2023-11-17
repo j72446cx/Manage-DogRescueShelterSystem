@@ -14,15 +14,15 @@
 		<div class="tags-close-box">
 			<el-dropdown @command="handleTags">
 				<el-button size="small" type="primary">
-					标签选项
+					Tags Selection
 					<el-icon class="el-icon--right">
 						<arrow-down />
 					</el-icon>
 				</el-button>
 				<template #dropdown>
 					<el-dropdown-menu size="small">
-						<el-dropdown-item command="other">关闭其他</el-dropdown-item>
-						<el-dropdown-item command="all">关闭所有</el-dropdown-item>
+						<el-dropdown-item command="other">Close</el-dropdown-item>
+						<el-dropdown-item command="all">Remove</el-dropdown-item>
 					</el-dropdown-menu>
 				</template>
 			</el-dropdown>
