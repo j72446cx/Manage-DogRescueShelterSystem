@@ -273,7 +273,8 @@ export default{
             ElMessage.success('Delete successfully');
             axios.delete('/api/dogpage/delete/' + id);
           })
-          .catch(() => {});
+          .catch((er) => {
+            console.error(er)});
     },
 
     addDog: function (){

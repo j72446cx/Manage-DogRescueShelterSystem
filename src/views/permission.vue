@@ -4,8 +4,8 @@
 		<div class="mgb20">
 			<span class="label">角色：</span>
 			<el-select v-model="role" @change="handleChange">
-				<el-option label="超级管理员" value="admin"></el-option>
-				<el-option label="普通用户" value="user"></el-option>
+				<el-option label="Admin" value="admin"></el-option>
+				<el-option label="Staff" value="user"></el-option>
 			</el-select>
 		</div>
 		<div class="mgb20 tree-wrapper">
@@ -18,7 +18,7 @@
 				:default-checked-keys="checkedKeys"
 			/>
 		</div>
-		<el-button type="primary" @click="onSubmit">保存权限</el-button>
+		<el-button type="primary" @click="onSubmit">Save authorization</el-button>
 	</div>
 </template>
 
@@ -38,11 +38,11 @@ interface Tree {
 const data: Tree[] = [
 	{
 		id: '1',
-		label: '系统首页'
+		label: 'Dashboard'
 	},
 	{
 		id: '2',
-		label: '基础表格',
+		label: 'Table',
 		children: [
 			{
 				id: '15',

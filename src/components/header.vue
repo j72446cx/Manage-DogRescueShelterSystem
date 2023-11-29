@@ -48,6 +48,7 @@ import { onMounted } from 'vue';
 import { useSidebarStore } from '../store/sidebar';
 import { useRouter } from 'vue-router';
 import imgurl from '../assets/img/img.jpg';
+import messageStore from "../store/messageStore";
 
 const username: string | null = localStorage.getItem('ms_username');
 const message: number = 2;
@@ -69,6 +70,8 @@ const router = useRouter();
 const handleCommand = (command: string) => {
 	if (command == 'loginout') {
 		localStorage.removeItem('ms_username');
+    localStorage.removeItem('ms_token');
+    messageStore.disconnectWebSocket();
 		router.push('/login');
 	} else if (command == 'user') {
 		router.push('/user');

@@ -154,12 +154,12 @@ const items = [
         title: 'Charts',
         permiss: '11',
     },
-    // {
-    //     icon: 'Warning',
-    //     index: '/permission',
-    //     title: 'Permission Control',
-    //     permiss: '13',
-    // }
+    {
+        icon: 'Warning',
+        index: '/permission',
+        title: 'Permission Control',
+        permiss: '13',
+    }
     // ,
     // {
     //     icon: 'CoffeeCup',
