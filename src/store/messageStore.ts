@@ -1,4 +1,4 @@
-import {onUnmounted, reactive, readonly} from "vue";
+import {onUnmounted, reactive, readonly, computed} from "vue";
 import axios from "axios";
 
 interface Message {
@@ -12,15 +12,35 @@ interface Message {
     status: number;
 }
 
+interface sendMessage{
+    senderId : number;
+    receiverId : number;
+    type: string;
+    title: string;
+    body: string;
+    date: Date;
+    status: number;
+}
+
 interface State {
     messages: Message[];
     read_messages: Message[];
+    all_messages: Message[];
+    sent_messages: Message[];
     hasNewMessage: boolean;
 }
+
+const watchMessages = () => {
+    if (state.messages.length === 0) {
+        state.hasNewMessage = false;
+    }
+};
 
 const state = reactive<State>({
     messages: [],
     read_messages: [],
+    all_messages:[],
+    sent_messages:[],
     hasNewMessage: false
 });
 
@@ -33,8 +53,28 @@ const addReadMessage = (message: Message) => {
     state.read_messages.push(message);
 }
 
-const resetNewMessageFlag = () => {
-    state.hasNewMessage = false;
+const addAllMessage = (message: Message) => {
+    state.all_messages.push(message);
+}
+
+const addSentMessage = (message : Message) => {
+    state.sent_messages.push(message);
+}
+
+const sortSentMessages = () => {
+    state.sent_messages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
+const sortUnreadMessages = () => {
+    state.messages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
+const sortReadMessages = () => {
+    state.read_messages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
+const sortAllMessages = () => {
+    state.all_messages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 
 let webSocket : WebSocket | null = null;
@@ -44,8 +84,13 @@ const initWebSocket = (token:string) => {
 
     webSocket.onopen = () => {
         console.log("Websocket is opened");
+        state.messages = [];
+        state.read_messages = [];
+        state.all_messages = [];
+        state.sent_messages = [];
+        state.hasNewMessage = false;
         fetchNewMessages();
-        console.log("onopen, detected unread info: ", state.hasNewMessage)
+        fetchSentMessages();
     }
 
 
@@ -53,8 +98,7 @@ const initWebSocket = (token:string) => {
         state.hasNewMessage = true;
         fetchNewMessages();
         console.log("state.hasNewMsg: " + state.hasNewMessage);
-        console.log("Unread info: " + state.messages);
-        console.log("Read info: " + state.read_messages);
+        console.log("all messages: " + state.all_messages);
 
     };
 
@@ -67,39 +111,100 @@ const initWebSocket = (token:string) => {
     };
 }
 
+const fetchSentMessages = () => {
+    axios.get('/api/messages', {params: {senderId: localStorage.getItem("ms_id")}})
+        .then(response => {
+            const sortedMessages = response.data.data.rows.sort((a: Message, b: Message) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            sortedMessages.forEach((newMessage: Message) => {
+
+
+                    if (!state.sent_messages.some(message => message.messageId === newMessage.messageId)) {
+                        addSentMessage(newMessage);
+                        console.log("state.sentMessage: " + state.sent_messages);
+                    }
+
+
+                },
+
+            );
+        }).then(() => {
+            sortSentMessages();
+    })
+};
+
+
+
 const fetchNewMessages = () => {
 
     axios.get('/api/messages', {params: {receiverId: localStorage.getItem("ms_id")}})
         .then(response => {
 
-            response.data.data.rows.forEach((newMessage: Message) => {
+
+
+            const sortedMessages = response.data.data.rows.sort((a: Message, b: Message) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            sortedMessages.forEach((newMessage: Message) => {
+
+
                 if (!state.messages.some(message => message.messageId === newMessage.messageId)) {
                     if (newMessage.status === 0){
                         addMessage(newMessage);
+
+                        console.log("state.hasUnreadMessage: "+ state.hasNewMessage);
                     }
+
                 }
 
                 if (!state.read_messages.some(message => message.messageId === newMessage.messageId)){
                     if (newMessage.status === 1){
-                        addReadMessage(newMessage)
+                        addReadMessage(newMessage);
+
                     }
                 }
 
-            });
+                if (!state.all_messages.some(message => message.messageId === newMessage.messageId)){
+                    addAllMessage(newMessage);
 
-        })
+                }
+
+            },
+
+            );
+
+        }).then(() => {
+            sortAllMessages();
+            sortUnreadMessages();
+            sortReadMessages();
+    })
         .catch(error => {
             console.error("Error when getting information:", error);
         });
 
 };
 
-const markMessageAsRead = (messageId:number) => {
-    // 找到对应的消息并更新状态
-    const messageIndex = state.messages.findIndex(message => message.messageId === messageId);
-    if (messageIndex !== -1) {
-        state.messages.splice(messageIndex, 1); // 从未读列表中移除
+const sendMessageWebsocket = (message: sendMessage) => {
+    if (webSocket && webSocket.readyState === webSocket.OPEN){
+        webSocket.send(JSON.stringify(message));
+        fetchSentMessages();
+        console.log("Message sent by the websocket, with: " + JSON.stringify(message));
+
     }
+    else{
+        console.error("Websocket is not connected");
+    }
+}
+
+const markMessageAsRead = (messageId: number) => {
+    const messageIndex = state.all_messages.findIndex(message => message.messageId === messageId);
+    if (messageIndex !== -1) {
+        state.all_messages[messageIndex].status = 1; // 将状态设置为已读
+    }
+
+    // 从未读消息列表中移除
+    const unreadMessageIndex = state.messages.findIndex(message => message.messageId === messageId);
+    if (unreadMessageIndex !== -1) {
+        state.messages.splice(unreadMessageIndex, 1);
+    }
+    watchMessages();
 };
 
 const disconnectWebSocket = () => {
@@ -107,7 +212,7 @@ const disconnectWebSocket = () => {
         webSocket.close();
         webSocket = null;
     }
-}
+};
 
 onUnmounted(() => {
     disconnectWebSocket();
@@ -116,9 +221,12 @@ onUnmounted(() => {
 export default {
     state: readonly(state),
     addMessage,
-    resetNewMessageFlag,
     initWebSocket,
     disconnectWebSocket,
     fetchNewMessages,
-    markMessageAsRead
+    markMessageAsRead,
+    sendMessageWebsocket,
+    watchMessages,
+    fetchSentMessages,
+    sortSentMessages
 };

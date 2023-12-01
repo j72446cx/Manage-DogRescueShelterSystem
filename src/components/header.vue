@@ -12,12 +12,12 @@
 				<div class="btn-bell" @click="router.push('/tabs')">
 					<el-tooltip
 						effect="dark"
-						:content="message ? `You have ${message} unread messages` : `Message Center`"
+						:content="messageStore.state.hasNewMessage ? `You have ${messageStore.state.messages.length} unread messages` : `Message Center`"
 						placement="bottom"
 					>
 						<i class="el-icon-lx-notice"></i>
 					</el-tooltip>
-					<span class="btn-bell-badge" v-if="message"></span>
+					<span class="btn-bell-badge" v-if="messageStore.state.hasNewMessage"></span>
 				</div>
 				<!-- 用户头像 -->
 				<el-avatar class="user-avator" :size="30" :src="imgurl" />
