@@ -55,8 +55,8 @@
 							<div class="grid-content grid-con-2">
 								<el-icon class="grid-con-icon"><ChatDotRound /></el-icon>
 								<div class="grid-cont-right">
-									<div class="grid-num">321</div>
-									<div>System Messages</div>
+									<div class="grid-num">{{all_message}}</div>
+									<div>Messages</div>
 								</div>
 							</div>
 						</el-card>
@@ -221,6 +221,8 @@
 <script>
 
 import axios from "axios";
+import messageStore from "../store/messageStore.ts";
+
 
 export default {
   data(){
@@ -254,6 +256,8 @@ export default {
       },
 
       todoList: [],
+
+      all_message : messageStore.state.all_messages.length,
 
       imgurl : localStorage.getItem('ms_avatar'),
       name : localStorage.getItem('ms_username'),
