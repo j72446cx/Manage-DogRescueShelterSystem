@@ -72,6 +72,7 @@ interface info {
   identityPhoto: string;
   identification: string;
   lastUpdateTime: Date;
+  job:string;
 
 }
 
@@ -118,7 +119,12 @@ const submitForm = async (formEl: FormInstance | undefined) => {
                 localStorage.setItem('ms_age', JSON.stringify(staffInfo[0].age));
                 localStorage.setItem('ms_id', JSON.stringify(staffInfo[0].id));
                 localStorage.setItem('ms_avatar', staffInfo[0].avatar);
-                localStorage.setItem('ms_password', JSON.stringify(staffInfo[0].password));
+                localStorage.setItem('ms_password', JSON.stringify(staffInfo[0].password).slice(1,-1));
+                localStorage.setItem('ms_firstname', JSON.stringify(staffInfo[0].firstName).slice(1, -1));
+                localStorage.setItem('ms_lastname', JSON.stringify(staffInfo[0].lastName).slice(1, -1));
+                localStorage.setItem('ms_entryDate', JSON.stringify(staffInfo[0].entryDate).slice(1, -1));
+                localStorage.setItem('ms_job', JSON.stringify(staffInfo[0].job).slice(1, -1));
+                localStorage.setItem('ms_lastUpdateTime', JSON.stringify(staffInfo[0].lastUpdateTime).slice(1, -1));
 
                 const tokens = localStorage.getItem('ms_token');
                 console.log(localStorage.getItem('ms_token'));

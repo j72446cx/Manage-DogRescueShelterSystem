@@ -5,116 +5,113 @@
 				<el-card shadow="hover">
 					<template #header>
 						<div class="clearfix">
-							<span>基础信息</span>
+							<span>Employee Certificate</span>
 						</div>
 					</template>
 					<div class="info">
-						<div class="info-image" @click="showDialog">
-							<el-avatar :size="100" :src="avatarImg" />
+						<div class="info-image">
+							<el-avatar :size="100" :src="this.imgurl" />
 							<span class="info-edit">
 								<i class="el-icon-lx-camerafill"></i>
 							</span>
 						</div>
-						<div class="info-name">{{ name }}</div>
-						<div class="info-desc">不可能！我的代码怎么可能会有bug！</div>
+						<div class="info-name">{{ firstname }}</div>
+            <div class="info-desc">Staff ID: {{staff_id}}</div>
+            <div class="info-desc">Job: {{job}}</div>
+						<div class="info-desc">Entry Date: {{entryDate.split("T")[0]}}</div>
+<!--            <div class="info-desc">Last Update Time: {{lastUpdateTime.split("T")[0]}}</div>-->
+<!--            <div class="info-desc">Number of your dogs: {{dogNumber}}</div>-->
 					</div>
 				</el-card>
 			</el-col>
+
 			<el-col :span="12">
 				<el-card shadow="hover">
 					<template #header>
 						<div class="clearfix">
-							<span>账户编辑</span>
+							<span>Editing Password</span>
 						</div>
 					</template>
-					<el-form label-width="90px">
-						<el-form-item label="用户名："> {{ name }} </el-form-item>
-						<el-form-item label="旧密码：">
-							<el-input type="password" v-model="form.old"></el-input>
+					<el-form ref="form" :model="form" label-width="200px">
+						<el-form-item label="Username："> {{ this.username }} </el-form-item>
+						<el-form-item label="Early password：">
+							<el-input type="password" v-model="input_earlypsw"></el-input>
 						</el-form-item>
-						<el-form-item label="新密码：">
-							<el-input type="password" v-model="form.new"></el-input>
+						<el-form-item label="New password：">
+							<el-input type="password" v-model="formPsw.password"></el-input>
 						</el-form-item>
-						<el-form-item label="个人简介：">
-							<el-input v-model="form.desc"></el-input>
-						</el-form-item>
+
 						<el-form-item>
-							<el-button type="primary" @click="onSubmit">保存</el-button>
+							<el-button type="primary" @click="onSubmitPassword">Save</el-button>
 						</el-form-item>
 					</el-form>
 				</el-card>
 			</el-col>
 		</el-row>
-		<el-dialog title="裁剪图片" v-model="dialogVisible" width="600px">
-			<vue-cropper
-				ref="cropper"
-				:src="imgSrc"
-				:ready="cropImage"
-				:zoom="cropImage"
-				:cropmove="cropImage"
-				style="width: 100%; height: 400px"
-			></vue-cropper>
 
-			<template #footer>
-				<span class="dialog-footer">
-					<el-button class="crop-demo-btn" type="primary"
-						>选择图片
-						<input class="crop-input" type="file" name="image" accept="image/*" @change="setImage" />
-					</el-button>
-					<el-button type="primary" @click="saveAvatar">上传并保存</el-button>
-				</span>
-			</template>
-		</el-dialog>
 	</div>
 </template>
 
-<script setup lang="ts" name="user">
-import { reactive, ref } from 'vue';
-import VueCropper from 'vue-cropperjs';
-import 'cropperjs/dist/cropper.css';
-import avatar from '../assets/img/img.jpg';
 
-const name = localStorage.getItem('ms_username');
-const form = reactive({
-	old: '',
-	new: '',
-	desc: '不可能！我的代码怎么可能会有bug！'
-});
-const onSubmit = () => {};
+<script>
 
-const avatarImg = ref(avatar);
-const imgSrc = ref('');
-const cropImg = ref('');
-const dialogVisible = ref(false);
-const cropper: any = ref();
+import axios from "axios";
+import router from "../router/index.ts";
 
-const showDialog = () => {
-	dialogVisible.value = true;
-	imgSrc.value = avatarImg.value;
-};
+export default {
+  data(){
+    return{
+      username: localStorage.getItem("ms_username"),
+      imgurl : localStorage.getItem('ms_avatar'),
+      firstname: localStorage.getItem('ms_firstname'),
+      lastname: localStorage.getItem('ms_lastname'),
+      job: localStorage.getItem('ms_job'),
+      entryDate: localStorage.getItem('ms_entryDate'),
+      lastUpdateTime: localStorage.getItem('ms_lastUpdateTime'),
+      dogNumber: localStorage.getItem('ms_dogNumber'),
+      staff_id: localStorage.getItem('ms_id'),
+      password: localStorage.getItem('ms_password'),
+      input_earlypsw: '',
 
-const setImage = (e: any) => {
-	const file = e.target.files[0];
-	if (!file.type.includes('image/')) {
-		return;
-	}
-	const reader = new FileReader();
-	reader.onload = (event: any) => {
-		dialogVisible.value = true;
-		imgSrc.value = event.target.result;
-		cropper.value && cropper.value.replace(event.target.result);
-	};
-	reader.readAsDataURL(file);
-};
+      formPsw: {
+        password: '',
+        id: localStorage.getItem('ms_id')
+      }
+    }
+  },
 
-const cropImage = () => {
-	cropImg.value = cropper.value.getCroppedCanvas().toDataURL();
-};
+  methods: {
+      onSubmitPassword:function() {
 
-const saveAvatar = () => {
-	avatarImg.value = cropImg.value;
-	dialogVisible.value = false;
-};
+        if (this.input_earlypsw === this.password){
+          axios.put('api/staffpage/edit', this.formPsw)
+              .then((res) => res.data.msg === "success"?
+                  this.$message({
+                    message: "Password Changed Successfully",
+                    type: 'success'
+                  })
+                  :this.$message({
+                    message: "Some error occured, please contact IT department",
+                    type: 'error'
+                  }))
+        }
+        else{
+          this.$message({
+
+            message: 'Your early password is incorrect',
+            type: 'error'
+          })
+        }
+
+        router.push("/login")
+      }
+  }
+}
+
+
+
+
+
 </script>
 
 <style scoped>

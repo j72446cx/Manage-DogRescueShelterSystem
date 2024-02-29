@@ -27,6 +27,7 @@ interface State {
     read_messages: Message[];
     all_messages: Message[];
     sent_messages: Message[];
+    sent_user_messages: Message[];
     hasNewMessage: boolean;
 }
 
@@ -41,8 +42,13 @@ const state = reactive<State>({
     read_messages: [],
     all_messages:[],
     sent_messages:[],
+    sent_user_messages: [],
     hasNewMessage: false
 });
+
+const addSentUserMessage = (message: Message) => {
+    state.sent_user_messages.push(message);
+}
 
 const addMessage = (message: Message) => {
     state.messages.push(message);
@@ -63,6 +69,10 @@ const addSentMessage = (message : Message) => {
 
 const sortSentMessages = () => {
     state.sent_messages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
+const sortSentUserMessages = () => {
+    state.sent_user_messages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 
 const sortUnreadMessages = () => {
@@ -88,8 +98,10 @@ const initWebSocket = (token:string) => {
         state.read_messages = [];
         state.all_messages = [];
         state.sent_messages = [];
+        state.sent_user_messages = [];
         state.hasNewMessage = false;
         fetchNewMessages();
+        fetchSentMessagesUser();
         fetchSentMessages();
     }
 
@@ -112,7 +124,7 @@ const initWebSocket = (token:string) => {
 }
 
 const fetchSentMessages = () => {
-    axios.get('/api/messages', {params: {senderId: localStorage.getItem("ms_id")}})
+    axios.get('/api/messages', {params: {senderId: localStorage.getItem("ms_id"), page:1, pageSize: 100000}})
         .then(response => {
             const sortedMessages = response.data.data.rows.sort((a: Message, b: Message) => new Date(b.date).getTime() - new Date(a.date).getTime());
             sortedMessages.forEach((newMessage: Message) => {
@@ -132,11 +144,32 @@ const fetchSentMessages = () => {
     })
 };
 
+const fetchSentMessagesUser = () => {
+    axios.get('/api/messages/user', {params: {senderId: localStorage.getItem("ms_id"), page:1, pageSize: 10000}})
+        .then(response => {
+            const sortedMessages = response.data.data.rows.sort((a: Message, b: Message) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            sortedMessages.forEach((newMessage: Message) => {
+
+                    console.log("Hello! user: ", state.sent_user_messages)
+                    if (!state.sent_user_messages.some(message => message.messageId === newMessage.messageId)) {
+                        addSentUserMessage(newMessage);
+                        console.log("user state.sentMessage: " + state.sent_user_messages);
+                    }
+
+
+                },
+
+            );
+        }).then(() => {
+        sortSentUserMessages();
+    })
+};
+
 
 
 const fetchNewMessages = () => {
 
-    axios.get('/api/messages', {params: {receiverId: localStorage.getItem("ms_id")}})
+    axios.get('/api/messages', {params: {receiverId: localStorage.getItem("ms_id"), page:1, pageSize: 100000}})
         .then(response => {
 
 
@@ -185,6 +218,7 @@ const sendMessageWebsocket = (message: sendMessage) => {
     if (webSocket && webSocket.readyState === webSocket.OPEN){
         webSocket.send(JSON.stringify(message));
         fetchSentMessages();
+        fetchSentMessagesUser();
         console.log("Message sent by the websocket, with: " + JSON.stringify(message));
 
     }
@@ -228,5 +262,6 @@ export default {
     sendMessageWebsocket,
     watchMessages,
     fetchSentMessages,
-    sortSentMessages
+    sortSentMessages,
+    fetchSentMessagesUser
 };

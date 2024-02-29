@@ -20,7 +20,7 @@
 					<span class="btn-bell-badge" v-if="messageStore.state.hasNewMessage"></span>
 				</div>
 				<!-- 用户头像 -->
-				<el-avatar class="user-avator" :size="30" :src="imgurl" />
+				<el-avatar class="user-avator" :size="30" :src="this.avatar" />
 				<!-- 用户名下拉菜单 -->
 				<el-dropdown class="user-name" trigger="click" @command="handleCommand">
 					<span class="el-dropdown-link">
@@ -31,10 +31,7 @@
 					</span>
 					<template #dropdown>
 						<el-dropdown-menu>
-							<a href="https://github.com/lin-xin/vue-manage-system" target="_blank">
-								<el-dropdown-item>Github repo</el-dropdown-item>
-							</a>
-							<el-dropdown-item command="user">Personal Information</el-dropdown-item>
+							<el-dropdown-item command="user">Personal Center</el-dropdown-item>
 							<el-dropdown-item divided command="loginout">Logout</el-dropdown-item>
 						</el-dropdown-menu>
 					</template>
@@ -50,8 +47,8 @@ import { useRouter } from 'vue-router';
 import imgurl from '../assets/img/img.jpg';
 import messageStore from "../store/messageStore";
 
-const username: string | null = localStorage.getItem('ms_username');
-const message: number = 2;
+const username: string | null = localStorage.getItem('ms_firstname');
+const avatar: string| null = localStorage.getItem('ms_avatar')
 
 const sidebar = useSidebarStore();
 // 侧边栏折叠

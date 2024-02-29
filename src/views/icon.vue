@@ -10,12 +10,6 @@
               {{ data.isSelected ? (viewDaywork(data.day), '✔️') : '' }}
             </p>
 
-<!--            <span v-if="todoList.medicationInfo.some(activity => activity.datetime.split('T')[0] === data.day)" class="medication-mark">💊</span>-->
-<!--            <span v-if="hasActivityOnDate(data.day, this.todoList.medicationInfo)" class="medication-mark">💊</span>-->
-<!--            <span v-if="hasActivityOnDate(data.date, 'groomingInfo')" class="grooming-mark">✂️</span>-->
-<!--            <span v-if="hasActivityOnDate(data.date, 'exerciseInfo')" class="exercise-mark">🏃</span>-->
-<!--            <span v-if="hasActivityOnDate(data.date, 'feedingInfo')" class="feeding-mark">🍽️</span>-->
-
           </template>
         </el-calendar>
       </el-col>
@@ -28,16 +22,12 @@
           <template #header>
             <div class="clearfix">
               <span>Daily Feeding</span>
-              <el-button style="float: right; padding: 3px 0" text>Add</el-button>
+              <el-button style="float: right; padding: 3px 0" text></el-button>
             </div>
           </template>
 
           <el-table ref="myTable" :show-header="false" :data="todoList.feedingInfo"  style="width: 100%" height="100px">
-            <el-table-column width="40">
-              <template #default="scope">
-                <el-checkbox v-model="scope.row.status"></el-checkbox>
-              </template>
-            </el-table-column>
+
             <el-table-column>
               <template #default="scope">
                 <div
@@ -61,16 +51,12 @@
           <template #header>
             <div class="clearfix">
               <span>Daily Exercise</span>
-              <el-button style="float: right; padding: 3px 0" text>Add</el-button>
+              <el-button style="float: right; padding: 3px 0" text @click="button_exercise">Add</el-button>
             </div>
           </template>
 
           <el-table ref="myTable" :show-header="false" :data="todoList.exerciseInfo"  style="width: 100%" height="100px">
-            <el-table-column width="40">
-              <template #default="scope">
-                <el-checkbox v-model="scope.row.status"></el-checkbox>
-              </template>
-            </el-table-column>
+
             <el-table-column>
               <template #default="scope">
                 <div
@@ -93,16 +79,12 @@
           <template #header>
             <div class="clearfix">
               <span>Medication schedule</span>
-              <el-button style="float: right; padding: 3px 0" text>Add</el-button>
+              <el-button style="float: right; padding: 3px 0" text @click="button_medication">Add</el-button>
             </div>
           </template>
 
           <el-table ref="myTable" :show-header="false" :data="todoList.medicationInfo"  style="width: 100%" height="100px">
-            <el-table-column width="40">
-              <template #default="scope">
-                <el-checkbox v-model="scope.row.status"></el-checkbox>
-              </template>
-            </el-table-column>
+
             <el-table-column>
               <template #default="scope">
                 <div
@@ -125,16 +107,12 @@
           <template #header>
             <div class="clearfix">
               <span>Grooming Schedule</span>
-              <el-button style="float: right; padding: 3px 0" text>Add</el-button>
+              <el-button style="float: right; padding: 3px 0" text @click="button_grooming">Add</el-button>
             </div>
           </template>
 
           <el-table ref="myTable" :show-header="false" :data="todoList.groomingInfo"  style="width: 100%" height="100px">
-            <el-table-column width="40">
-              <template #default="scope">
-                <el-checkbox v-model="scope.row.status"></el-checkbox>
-              </template>
-            </el-table-column>
+
             <el-table-column>
               <template #default="scope">
                 <div
@@ -166,6 +144,7 @@
 
 <script>
 import axios from "axios";
+import router from "../router/index.ts";
 
 export default {
   data(){
@@ -248,6 +227,19 @@ export default {
         let activityDate = activity.datetime.split('T')[0];
         return activityDate === date;
       })
+    },
+
+    button_grooming: function (){
+        router.push("/formGrooming")
+    },
+
+    button_exercise: function (){
+      router.push("/formExercise")
+
+    },
+    button_medication:function (){
+      router.push("/formMedication")
+
     }
 
   },
