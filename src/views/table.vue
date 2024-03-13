@@ -1,21 +1,10 @@
 <template>
 	<div>
 		<div class="container">
-<!--			<div class="handle-box">-->
-<!--				<el-select v-model="query.address" placeholder="地址" class="handle-select mr10">-->
-<!--					<el-option key="1" label="广东省" value="广东省"></el-option>-->
-<!--					<el-option key="2" label="湖南省" value="湖南省"></el-option>-->
-<!--				</el-select>-->
-<!--				<el-input v-model="query.name" placeholder="用户名" class="handle-input mr10"></el-input>-->
-<!--				<el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>-->
-<!--				<el-button type="primary" :icon="Plus">新增</el-button>-->
-<!--			</div>-->
-
-
-			<el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+			<el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header" v-loading="isloadingTable">
         <el-table-column prop="id" label="ID" width="60">
         </el-table-column>
-        <el-table-column prop="name" label="Name" width="80">
+        <el-table-column prop="name" label="Name" width="150">
         </el-table-column>
         <el-table-column prop="age" label="Age" width="60">
         </el-table-column>
@@ -25,9 +14,15 @@
         </el-table-column>
         <el-table-column prop="adoptStatus" label="Adopt Status" width="120">
         </el-table-column>
-        <el-table-column prop="entryDate" label="Entry Date" width="180">
+        <el-table-column label="Entry Date" width="180">
+          <template v-slot="scope">
+            {{transofmDateFormat(scope.row.entryDate)}}
+          </template>
         </el-table-column>
-        <el-table-column prop="lastUpdateTime" formatter="" label="Latest Update" width="170">
+        <el-table-column formatter="" label="Latest Update" width="300">
+          <template v-slot="scope">
+            {{transofmDateFormat(scope.row.lastUpdateTime, 1)}}
+          </template>
         </el-table-column>
         <el-table-column label="Operation" width="180">
           <template v-slot="scope">
@@ -56,7 +51,7 @@
 
 <!--    query dog-->
     <el-dialog title="Detailed Dog Information" v-model="this.dialogFormVisible">
-      <el-form ref="form" :model="individualData" label-width="150px">
+      <el-form ref="form" :model="individualData" label-width="150px" class="label-bold">
 
         <el-form-item label="ID: ">
           <span>{{individualData.id}}</span>
@@ -184,7 +179,7 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="onSubmitEdit" >Submit</el-button>
+          <el-button type="primary" @click="onSubmitEdit" v-loading.fullscreen.lock="isloadingEdit" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Submit</el-button>
           <el-button type="primary" @click="dialogEditFormVisible = false">Cancel</el-button>
         </el-form-item>
 
@@ -197,7 +192,7 @@
 
 
 <script>
-import axios from 'axios'
+import service from "../utils/request.ts";
 import {ElMessage, ElMessageBox} from "element-plus";
 
 export default{
@@ -206,6 +201,7 @@ export default{
     return {
       tableData : [],
       individualData : [],
+      isloadingTable: false,
       searchForm : {
         id:'',
         gender:'',
@@ -231,37 +227,18 @@ export default{
       },
       currentPage : 1,
       pageSize : 5,
-      total:1000
+      total:1000,
+
+      isloadingEdit: false
     }
   },
   methods: {
-    onSubmitSearch: function (){
-      this.searchForm =  this.transformEntryDate(this.searchForm)
-      this.fetchDogs()
-      alert("Searching "+ JSON.stringify(this.searchForm))
-    },
 
-    onSubmitAdd: function (){
-      alert("Adding: " + JSON.stringify(this.infoForm))
-      this.addDog()
-      this.dialogAddFormVisible = false
-      location.reload()
-    },
 
     onSubmitEdit: function (){
-      alert("Editing : " + JSON.stringify(this.individualData))
+      this.isloadingEdit= true;
       this.editDog()
       this.dialogEditFormVisible = false
-      location.reload()
-    },
-
-    deleteDog: function (id){
-      axios.delete('/dogpage/delete/' + id)
-          .then(() =>
-          {this.tableData = this.tableData.filter((dog) => dog.id !== id)
-            location.reload()
-            alert("Deleted successfully!")})
-          .catch((error) => alert("Delete Failed, with error: " + error))
     },
 
     handleDelete: function(id){
@@ -270,27 +247,46 @@ export default{
         type: 'warning'
       })
           .then(() => {
-            ElMessage.success('Delete successfully');
-            axios.delete('/api/dogpage/delete/' + id);
+            service.delete('/api/dogpage/delete/' + id).then((res) => {
+              if(res.data.msg === 'success'){
+                this.$message({
+                  type:'success',
+                  message: 'Deleted successfully'
+                })
+              }
+            }).then(() => this.fetchDogs());
           })
           .catch((er) => {
             console.error(er)});
     },
 
-    addDog: function (){
-      axios.post('/api/dogpage/save', this.infoForm)
-          .then(()=> alert("Added successfully!"))
-          .catch((error) => alert("Add Failed, with error: " + error))
-    },
-
     editDog: function (){
-      axios.put('/api/dogpage/edit/', this.individualData)
-          .then(()=> alert("Edited successfully!"))
-          .catch((error) => alert("Edit Failed, with error: " + error))
+
+      this.isloadingEdit = true;
+
+      service.put('/api/dogpage/edit/', this.individualData)
+          .then((res) => {
+
+            setTimeout(() => {
+              this.isloadingEdit = false;
+              if(res.data.msg === 'success'){
+                this.$message({
+                  type: 'success',
+                  message: 'Submit successfully'
+                })
+                this.fetchDogs();
+              }
+              else{
+                this.$message.error("Error when editing")
+              }
+            }, 2000);
+
+          })
+          .catch((error) => console.log("error when editing: ", error))
     },
 
     getDetailDog: function (id){
-      axios.get('/api/dogpage/'+id)
+      service.get('/api/dogpage/'+id)
           .then((result) =>
           {this.individualData = result.data.data})
     },
@@ -313,10 +309,6 @@ export default{
       this.dialogEditFormVisible = true
     },
 
-    setVisibleAddDialog: function (){
-      this.dialogAddFormVisible = true
-    },
-
     handleSizeChange:function (val){
       this.pageSize = val
       this.currentPage = 1;
@@ -327,21 +319,7 @@ export default{
       this.fetchDogs()
     },
 
-    transformEntryDate:function (originalData){
-      const transofmedData = {...originalData}
-      if (transofmedData.entryDate){
-        const [entryStartDate, entryEndDate] = transofmedData.entryDate;
-
-        transofmedData.entryStartDate = entryStartDate
-        transofmedData.entryEndDate = entryEndDate
-        delete transofmedData.entryDate
-      }
-
-      return transofmedData
-    },
     transofmDateFormat: function (inputDate, showTime=0) {
-
-
       // Ensure inputDate is a valid date string
       const date = new Date(inputDate);
 
@@ -364,15 +342,9 @@ export default{
       return `${formattedDate}  ${formattedTime}`;
     },
 
-    // upload Img
-    handleRemove(file, fileList) {
-      console.log(file, fileList);
-    },
-    handlePreview(file) {
-      console.log(file);
-    },
-
     fetchDogs:function (){
+      this.isloadingTable = true;
+
       const {id, gender, adoptStatus} = this.searchForm
       const params={
         page: this.currentPage,
@@ -382,17 +354,15 @@ export default{
         adoptStatus
       };
 
-      axios.get('/api/dogpage', {params:params})
+      service.get('/api/dogpage', {params:params})
           .then((result) => {
             this.tableData = result.data.data.rows;
             this.total = result.data.data.total
-            for (let i = 0; i < this.total; i++) {
-              this.tableData[i].entryDate = this.transofmDateFormat(this.tableData[i].entryDate);
-              this.tableData[i].lastVaccineDate = this.transofmDateFormat(this.tableData[i].lastVaccineDate);
-              this.tableData[i].adoptedDate = this.transofmDateFormat(this.tableData[i].adoptedDate);
-              this.tableData[i].lastUpdateTime = this.transofmDateFormat(this.tableData[i].lastUpdateTime, 1);
-            }
-          })
+          }).then(() => {
+            setTimeout(() => {
+              this.isloadingTable = false;
+            }, 1000)
+      })
           .catch((error) => console.error('Error when fetching data: ', error))
     }
   },
@@ -404,114 +374,6 @@ export default{
   }
 }
 </script>
-
-<!--<script setup lang="ts" name="basetable">-->
-<!--import { ref, reactive } from 'vue';-->
-<!--import { ElMessage, ElMessageBox } from 'element-plus';-->
-<!--import { Delete, Edit, Search, Plus } from '@element-plus/icons-vue';-->
-<!--import {fetchDogData} from "../api/index";-->
-<!--import axios from "axios";-->
-
-<!--interface TableItem{-->
-<!--  id: number;-->
-<!--  name: string;-->
-<!--  age: number;-->
-<!--  imgURL: string;-->
-<!--  species: string;-->
-<!--  intro:string;-->
-<!--  gender:string;-->
-<!--  lastFeedTime:string;-->
-<!--  entryDate:string;-->
-<!--  lastUpdateTime:string;-->
-<!--  adoptStatus:string;-->
-<!--  medicalStatus:string;-->
-<!--  medicalHistory:string;-->
-<!--  adoptedDate:string;-->
-<!--  lastVaccineDate:string;-->
-<!--}-->
-<!--let pageSize = 5;-->
-<!--let currentPage = 1;-->
-<!--const tableData = ref<TableItem[]>([]);-->
-<!--const getData = () => {-->
-<!--  const params = {-->
-<!--    page: currentPage,-->
-<!--    pageSize: pageSize-->
-<!--  }-->
-<!--  axios.get('/api/dogpage',{params:params})-->
-<!--      .then((result) => {-->
-<!--        tableData.value = result.data.data.rows;-->
-<!--        pageTotal.value = result.data.data.total;-->
-<!--      })-->
-<!--};-->
-<!--getData();-->
-<!--const handleSizeChange = (val: number) => {-->
-<!--  pageSize = val-->
-<!--  currentPage = 1;-->
-<!--  getData()-->
-<!--};-->
-<!--const handleCurrentChange =  (val: number) => {-->
-<!--  currentPage=val-->
-<!--  getData()-->
-<!--};-->
-<!--// const query = reactive({-->
-<!--// 	address: '',-->
-<!--// 	name: '',-->
-<!--// 	pageIndex: 1,-->
-<!--// 	pageSize: 10-->
-<!--// });-->
-
-<!--const pageTotal = ref(0);-->
-<!--// 获取表格数据-->
-
-
-
-<!--// // 查询操作-->
-<!--// const handleSearch = () => {-->
-<!--// 	query.pageIndex = 1;-->
-<!--// 	getData();-->
-<!--// };-->
-<!--// // 分页导航-->
-<!--// const handlePageChange = (val: number) => {-->
-<!--// 	query.pageIndex = val;-->
-<!--// 	getData();-->
-<!--// };-->
-<!--//-->
-<!--// // 删除操作-->
-<!--const handleDelete = (index: number) => {-->
-<!--	// 二次确认删除-->
-<!--	ElMessageBox.confirm('Do you want to delete？', 'Warning', {-->
-<!--		type: 'warning'-->
-<!--	})-->
-<!--		.then(() => {-->
-<!--			ElMessage.success('Delete successfully');-->
-<!--			axios.delete('/api/dogpage/' + index);-->
-<!--		})-->
-<!--		.catch(() => {});-->
-<!--};-->
-
-
-<!--//-->
-<!--// // 表格编辑时弹窗和保存-->
-<!--// const editVisible = ref(false);-->
-<!--// let form = reactive({-->
-<!--// 	name: '',-->
-<!--// 	address: ''-->
-<!--// });-->
-<!--// let idx: number = -1;-->
-<!--// const handleEdit = (index: number, row: any) => {-->
-<!--// 	idx = index;-->
-<!--// 	form.name = row.name;-->
-<!--// 	form.address = row.address;-->
-<!--// 	editVisible.value = true;-->
-<!--// };-->
-<!--// const saveEdit = () => {-->
-<!--// 	editVisible.value = false;-->
-<!--// 	ElMessage.success(`修改第 ${idx + 1} 行成功`);-->
-<!--// 	tableData.value[idx].name = form.name;-->
-<!--// 	tableData.value[idx].address = form.address;-->
-<!--// };-->
-
-<!--</script>-->
 
 <style scoped>
 .handle-box {
@@ -540,6 +402,11 @@ export default{
 	margin: auto;
 	width: 40px;
 	height: 40px;
+}
+
+.label-bold {
+  font-weight: bold;
+  color: #333;
 }
 
 

@@ -6,16 +6,19 @@ import router from './router';
 import { usePermissStore } from './store/permiss';
 import 'element-plus/dist/index.css';
 import './assets/css/icon.css';
-import locale from 'element-plus/lib/locale/lang/en'
+import locale from 'element-plus/es/locale/lang/en'
 import element from 'element-plus'
 import messageStore from "./store/messageStore";
 import ElementPlus from 'element-plus'
+import request from "./utils/request";
+import service from "./utils/request";
 
 const app = createApp(App);
 app.use(createPinia());
 app.use(ElementPlus);
 app.use(router);
 app.use(element, { locale })
+
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component);

@@ -48,7 +48,7 @@
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" @click="onSubmitAdd" >Create</el-button>
+              <el-button type="primary" @click="onSubmitAdd" v-loading.fullscreen.lock="loadingSubmit" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Create</el-button>
             </el-form-item>
 
             </el-form>
@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import service from "../utils/request.ts";
 
 export default {
   data(){
@@ -76,20 +76,48 @@ export default {
         lastVaccineDate:'',
         lastUpdateTime:'',
         adoptedDate:''
-      }
+      },
+
+      loadingSubmit: false
     }
   },
   methods: {
+    clear_form(){
+      this.infoForm = {
+        id:'',
+        name:'',
+        age:'',
+        imgURL:'',
+        species:'',
+        adoptStatus:'',
+        medicalHistory:'',
+        intro:'',
+        gender:'',
+        entryDate:'',
+        lastVaccineDate:'',
+        lastUpdateTime:'',
+        adoptedDate:''
+      }
+    },
+
     onSubmitAdd: function (){
-      alert("Adding: " + JSON.stringify(this.infoForm))
       this.addDog()
       this.dialogAddFormVisible = false
     },
     addDog: function (){
-      axios.post('/api/dogpage/save', this.infoForm)
-          .then(()=> alert("Added successfully!"))
-          .then(()=> location.reload())
-          .catch((error) => alert("Add Failed, with error: " + error))
+      this.loadingSubmit = true;
+      service.post('/api/dogpage/save', this.infoForm)
+          .then((res)=> setTimeout(() => {
+            this.loadingSubmit = false;
+            if (res.data.msg === 'success'){
+              this.$message({
+                type: 'success',
+                message: 'Submit successfully'
+              })
+            }
+            this.clear_form();
+          }, 1000))
+          .catch((error) => console.log("Error when submitting form: ", error))
     }
   }
 

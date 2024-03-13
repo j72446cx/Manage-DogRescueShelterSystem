@@ -1,5 +1,5 @@
 import {onUnmounted, reactive, readonly, computed} from "vue";
-import axios from "axios";
+import service from "../utils/request";
 
 interface Message {
     messageId: number;
@@ -109,8 +109,7 @@ const initWebSocket = (token:string) => {
     webSocket.onmessage = (event) => {
         state.hasNewMessage = true;
         fetchNewMessages();
-        console.log("state.hasNewMsg: " + state.hasNewMessage);
-        console.log("all messages: " + state.all_messages);
+
 
     };
 
@@ -124,7 +123,7 @@ const initWebSocket = (token:string) => {
 }
 
 const fetchSentMessages = () => {
-    axios.get('/api/messages', {params: {senderId: localStorage.getItem("ms_id"), page:1, pageSize: 100000}})
+    service.get('/api/messages', {params: {senderId: localStorage.getItem("ms_id"), page:1, pageSize: 100000}})
         .then(response => {
             const sortedMessages = response.data.data.rows.sort((a: Message, b: Message) => new Date(b.date).getTime() - new Date(a.date).getTime());
             sortedMessages.forEach((newMessage: Message) => {
@@ -132,7 +131,7 @@ const fetchSentMessages = () => {
 
                     if (!state.sent_messages.some(message => message.messageId === newMessage.messageId)) {
                         addSentMessage(newMessage);
-                        console.log("state.sentMessage: " + state.sent_messages);
+
                     }
 
 
@@ -145,15 +144,15 @@ const fetchSentMessages = () => {
 };
 
 const fetchSentMessagesUser = () => {
-    axios.get('/api/messages/user', {params: {senderId: localStorage.getItem("ms_id"), page:1, pageSize: 10000}})
+    service.get('/api/messages/user', {params: {senderId: localStorage.getItem("ms_id"), page:1, pageSize: 10000}})
         .then(response => {
             const sortedMessages = response.data.data.rows.sort((a: Message, b: Message) => new Date(b.date).getTime() - new Date(a.date).getTime());
             sortedMessages.forEach((newMessage: Message) => {
 
-                    console.log("Hello! user: ", state.sent_user_messages)
+
                     if (!state.sent_user_messages.some(message => message.messageId === newMessage.messageId)) {
                         addSentUserMessage(newMessage);
-                        console.log("user state.sentMessage: " + state.sent_user_messages);
+
                     }
 
 
@@ -169,7 +168,7 @@ const fetchSentMessagesUser = () => {
 
 const fetchNewMessages = () => {
 
-    axios.get('/api/messages', {params: {receiverId: localStorage.getItem("ms_id"), page:1, pageSize: 100000}})
+    service.get('/api/messages', {params: {receiverId: localStorage.getItem("ms_id"), page:1, pageSize: 100000}})
         .then(response => {
 
 
@@ -182,7 +181,6 @@ const fetchNewMessages = () => {
                     if (newMessage.status === 0){
                         addMessage(newMessage);
 
-                        console.log("state.hasUnreadMessage: "+ state.hasNewMessage);
                     }
 
                 }
@@ -219,7 +217,7 @@ const sendMessageWebsocket = (message: sendMessage) => {
         webSocket.send(JSON.stringify(message));
         fetchSentMessages();
         fetchSentMessagesUser();
-        console.log("Message sent by the websocket, with: " + JSON.stringify(message));
+
 
     }
     else{

@@ -73,11 +73,11 @@ const items = [
                 title: 'Dog Table',
                 permiss: '2',
             },
-            // {
-            //     index: '/import',
-            //     title: '导入Excel',
-            //     permiss: '2',
-            // },
+            {
+                index: '/staff_table',
+                title: 'Staff Table',
+                permiss: '2',
+            },
             // {
             //     index: '/export',
             //     title: '导出Excel',
@@ -93,47 +93,29 @@ const items = [
     subs: [
       {
         index: '/form',
-        title: 'Add Dog',
+        title: 'Dog Registration',
         permiss: '5',
       },
       {
+        index: 'new_staff',
+        title: 'Staff Registration',
+        permiss: '5'
+      },
+      {
         index: '/formGrooming',
-        title: 'Add Grooming Schedule',
+        title: 'Grooming Schedule',
         permiss: '5'
       },
       {
         index: '/formExercise',
-        title: 'Add Exercise Schedule',
+        title: 'Exercise Schedule',
         permiss: '5'
       },
       {
         index: '/formMedication',
-        title: 'Add Medication Schedule',
+        title: 'Medication Schedule',
         permiss: '5'
       }
-      // ,
-      // {
-      //     index: '/upload',
-      //     title: '文件上传',
-      //     permiss: '6',
-      // },
-      // {
-      //     index: '4',
-      //     title: '三级菜单',
-      //     permiss: '7',
-      //     subs: [
-      //         {
-      //             index: '/editor',
-      //             title: '富文本编辑器',
-      //             permiss: '8',
-      //         },
-      //         {
-      //             index: '/markdown',
-      //             title: 'markdown编辑器',
-      //             permiss: '9',
-      //         },
-      //     ],
-      // },
     ],
   },
     {
@@ -149,17 +131,17 @@ const items = [
         permiss: '10',
     },
     {
-        icon: 'PieChart',
+        icon: 'Tickets',
         index: '/charts',
-        title: 'Charts',
+        title: 'Applications',
         permiss: '11',
     },
-    {
-        icon: 'Warning',
-        index: '/permission',
-        title: 'Permission Control',
-        permiss: '13',
-    }
+    // {
+    //     icon: 'Warning',
+    //     index: '/permission',
+    //     title: 'Permission Control',
+    //     permiss: '13',
+    // }
     // ,
     // {
     //     icon: 'CoffeeCup',

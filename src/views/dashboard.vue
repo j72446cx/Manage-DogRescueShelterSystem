@@ -91,7 +91,7 @@
 								<el-icon class="grid-con-icon"><Notification /></el-icon>
 								<div class="grid-cont-right">
 									<div class="grid-num"><span>{{this.taskLeft}}</span></div>
-									<div>Tasks Left Today</div>
+									<div>Tasks For Today</div>
 								</div>
 							</div>
 						</el-card>
@@ -115,15 +115,15 @@
 							<template #default="scope">
 
 									{{ scope.row.title }}
-                <div class="icon-container">
-                  <el-button type="text" @click="handleYes(scope.row.id)">
-                    <el-icon><Select /></el-icon>
-                  </el-button>
+<!--                <div class="icon-container">-->
+<!--                  <el-button type="text" @click="handleYes(scope.row.id)">-->
+<!--                    <el-icon><Select /></el-icon>-->
+<!--                  </el-button>-->
 
-                  <el-button type="text" @click="handleNo(scope.row.id)">
-                    <el-icon><CloseBold/></el-icon>
-                  </el-button>
-                </div>
+<!--                  <el-button type="text" @click="handleNo(scope.row.id)">-->
+<!--                    <el-icon><CloseBold/></el-icon>-->
+<!--                  </el-button>-->
+<!--                </div>-->
 							</template>
 						</el-table-column>
 					</el-table>
@@ -177,7 +177,7 @@
 
 <script>
 
-import axios from "axios";
+import service from "../utils/request.ts";
 import messageStore from "../store/messageStore.ts";
 
 
@@ -268,66 +268,57 @@ export default {
     return `${date.getFullYear()}-${month}-${day}`;
   },
 
-    getDailyWork: function () {
-      axios.get("/api/interaction/getMedication", {params: this.param})
-          .then((res) => {localStorage.setItem("eve_med", JSON.stringify(res.data.data.rows));
+    async getDailyWork() {
+      try{
+        const medResponse = await service.get("/api/interaction/getMedication", { params: this.param });
+        localStorage.setItem("eve_med", JSON.stringify(medResponse.data.data.rows));
 
-
-            res.data.data.rows.forEach((item, index) => {
-              this.taskLeft++;
-              this.todoList.push({
-                title: `Medicate the dog with id: ${item.dog_id}`,
-                status: false
-              });
-            });
-
+        for (const item of medResponse.data.data.rows) {
+          this.taskLeft++;
+          const dogName = await this.getDogName(item.dog_id);
+          this.todoList.push({
+            title: `Medicate ${dogName} (id: ${item.dog_id}) with ${item.dosage} of ${item.medication_name}`,
+            status: false
           });
+        }
 
-      axios.get("api/interaction/getExercise", {params: this.param2})
-          .then((res) => {localStorage.setItem("eve_ex", JSON.stringify(res.data.data.rows));
-            res.data.data.rows.forEach((item, index) => {
-              this.taskLeft++;
-              this.todoList.push({
-                title: `Exercise with the dog with id: ${item.dog_id}`,
-                status: false
-              });
-            });
+        const exResponse = await service.get("api/interaction/getExercise", { params: this.param2 });
+        localStorage.setItem("eve_ex", JSON.stringify(exResponse.data.data.rows));
+
+        for (const item of exResponse.data.data.rows) {
+          this.taskLeft++;
+          const dogName = await this.getDogName(item.dog_id);
+          this.todoList.push({
+            title: `Exercise with ${dogName} (id: ${item.dog_id}) at ${this.transofmDateFormat(item.date,1)} with duration ${item.duration}`,
+            status: false
           });
+        }
 
-      // axios.get("api/interaction/getFeed", {params: this.param4})
-      //     .then((res) => {localStorage.setItem("eve_feed", JSON.stringify(res.data.data.rows));
-      //       res.data.data.rows.forEach((item, index) => {
-      //         this.taskLeft++;
-      //         this.todoList.push({
-      //           title: `Feeding ${item.dog_id}`,
-      //           status: false
-      //         });
-      //       });
-      //
-      //     });
+        const  grResponse = await service.get("api/interaction/getGrooming", {params: this.param3});
+        localStorage.setItem("eve_gr", JSON.stringify(grResponse.data.data.rows));
 
-      axios.get("api/interaction/getGrooming", {params: this.param3})
-          .then((res) => {localStorage.setItem("eve_gr", JSON.stringify(res.data.data.rows));
-            res.data.data.rows.forEach((item, index) => {
+        for (const item of grResponse.data.data.rows){
+          this.taskLeft++;
+          const dogName = await this.getDogName(item.dog_id);
+          this.todoList.push({
+            title: `Grooming for ${dogName} (id: ${item.dog_id}) takes place at ${this.transofmDateFormat(item.grooming_date, 1)}`,
+            status: false
+          })
+        }
+        localStorage.setItem('task_left', this.taskLeft);
+      }catch (err){
+        console.error("Error when getting daily work: ", err)
+      }
 
-              this.taskLeft++;
-              this.todoList.push({
-                title: `Grooming ${item.dog_id} at ${item.grooming_date}`,
-                status: false
-              });
-            });
 
-          });
-
-      localStorage.setItem('task_left', this.taskLeft);
     },
 
     getResponsible: function (){
-     axios.get("/api/interaction/staffGetDog/" + localStorage.getItem('ms_id'))
+     service.get("/api/interaction/staffGetDog/" + localStorage.getItem('ms_id'))
          .then((res) => {
            this.resDogNumber = res.data.data.length;
            for (let i = 0; i < this.resDogNumber; i++) {
-             axios.get("api/interaction/getFeed", {params: {dog_id:res.data.data[i].id, feeding_time_start:this.formatDateStart(new Date()), feeding_time_end: this.formatDateEnd(new Date())}})
+             service.get("api/interaction/getFeed", {params: {dog_id:res.data.data[i].id, feeding_time_start:this.formatDateStart(new Date()), feeding_time_end: this.formatDateEnd(new Date())}})
              .then((result) =>{
                for (let j = 0; j < result.data.data.total; j++) {
                  if(result.data.data.rows[j].normal_feed === -1){
@@ -356,7 +347,7 @@ export default {
       this.search_form.dog_id = id;
       this.getFeeding().then(() => {
         let updatePromise = this.table_data.map(item => {
-          return axios.put("api/interaction/feedNormal/" + item.id + "/1")
+          return service.put("api/interaction/feedNormal/" + item.id + "/1")
         });
 
         Promise.all(updatePromise).then((response) => {
@@ -391,7 +382,7 @@ export default {
       });
 
       // for (let i = 0; i < this.table_data.length; i++) {
-      //   axios.put("api/interaction/feedNormal/" + this.table_data[i].id + "/1")
+      //   service.put("api/interaction/feedNormal/" + this.table_data[i].id + "/1")
       // }
       // this.resDogs = []
       // this.getResponsible()
@@ -404,12 +395,40 @@ export default {
 
     },
 
+    transofmDateFormat: function (inputDate, showTime=0) {
+
+      if (inputDate === null){
+        return "To be confirmed";
+      }
+
+
+      // Ensure inputDate is a valid date string
+      const date = new Date(inputDate);
+
+      // Get date and time components
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-based
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+
+      // Format the date and time components
+      const formattedDate = `${day}-${month}-${year}`;
+      const formattedTime = `${hours}:${minutes}`;
+
+      // Combine the formatted date and time
+      if (showTime === 0){
+        return `${formattedDate}`;
+      }
+      return `${formattedDate}  ${formattedTime}`;
+    },
+
     handleSubmitNotes: function (){
 
      const updatePromises =  this.table_data.map(item => {
        // Encode notes to ensure special characters in notes do not break the URL
        const encodedNotes = encodeURIComponent(this.dialog_form.notes);
-       return axios.put(`api/interaction/feedNormal/${item.id}/0/?notes=${encodedNotes}`);
+       return service.put(`api/interaction/feedNormal/${item.id}/0/?notes=${encodedNotes}`);
      });
 
      Promise.all(updatePromises).then((response) => {
@@ -440,30 +459,6 @@ export default {
          message: "An error occurred, please contact IT department",
        });
      })
-      // for (let i = 0; i < this.table_data.length; i++) {
-      //   axios.put("api/interaction/feedNormal/" + this.table_data[i].id + "/0/" + "?notes=" + this.dialog_form.notes)
-      //   .then((res) => {
-      //     if (res.data.msg === 'success'){
-      //       this.$notify({
-      //         title: "Success",
-      //         message: "Upload Successfully",
-      //         type: 'success'
-      //       })
-      //
-      //       this.innerDialogVisible = false;
-      //       this.dialog_visible = false;
-      //
-      //     }
-      //
-      //     else {
-      //       this.$notify.error({
-      //         title: "Failed",
-      //         message: "Upload Error, please contact IT department",
-      //
-      //       })
-      //     }
-      //   })
-      // }
     },
 
     rearrangeDate: function (dateStr) {
@@ -486,7 +481,7 @@ export default {
         feeding_time_end
       }
 
-      return axios.get("api/interaction/getFeed", {params: param})
+      return service.get("api/interaction/getFeed", {params: param})
         .then((res) => {
           this.table_data = res.data.data.rows;
 
@@ -501,6 +496,11 @@ export default {
 
 
     },
+
+    async getDogName(id){
+      const res = await service.get("api/dogpage/" + id);
+      return res.data.data.name;
+    }
 
 
 

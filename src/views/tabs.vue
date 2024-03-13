@@ -158,7 +158,7 @@
           </el-form-item>
           <br>
           <el-form-item>
-            <el-button type="primary" @click="onSubmitAdd" >Submit</el-button>
+            <el-button type="primary" @click="onSubmitAdd" v-loading.fullscreen.lock="isloadingToStaff" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)" >Submit</el-button>
           </el-form-item>
 
         </el-form>
@@ -181,7 +181,7 @@
           </el-form-item>
           <br>
           <el-form-item>
-            <el-button type="primary" @click="onSubmitAddToUser" >Submit</el-button>
+            <el-button type="primary" @click="onSubmitAddToUser" v-loading.fullscreen.lock="isloadingToUser" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Submit</el-button>
           </el-form-item>
 
         </el-form>
@@ -189,8 +189,14 @@
 
 		</el-tabs>
 
-    <el-drawer title="Message Details: " v-model="drawer">
+    <el-drawer title="Message Details: " v-model="drawer" size="50%">
       <div v-if="selectedMessage">
+        <el-button v-if="activeTabs==='first'" round icon="Promotion" style="color: #2d8cf0" @click="replyStaff(selectedMessage.senderId, selectedMessage.title, selectedMessage.body, selectedMessage.receiverName, selectedMessage.senderName, selectedMessage.date)">Reply</el-button>
+        <el-button v-if="activeTabs==='second'" round icon="Promotion" style="color: #2d8cf0" @click="replyStaff(selectedMessage.receiverId, selectedMessage.title, selectedMessage.body, selectedMessage.receiverName, selectedMessage.senderName, selectedMessage.date)">Resend</el-button>
+        <el-button v-if="activeTabs!=='five'" round icon="Share" style="color: #2d8cf0" @click="forward_mail(selectedMessage.title, selectedMessage.body, selectedMessage.receiverName, selectedMessage.senderName, selectedMessage.date)">Forward</el-button>
+        <el-button v-if="activeTabs==='five'" round icon="Promotion" style="color: #2d8cf0" @click="replyAdopter(selectedMessage.senderId, selectedMessage.title, selectedMessage.body, selectedMessage.receiverName, selectedMessage.senderName, selectedMessage.date)">Resend</el-button>
+        <el-button v-if="activeTabs==='five'" round icon="Share" style="color: #2d8cf0" @click="forward_mail_adopter(selectedMessage.title, selectedMessage.body, selectedMessage.receiverName, selectedMessage.senderName, selectedMessage.date, selectedMessage.receiverId)">Forward</el-button>
+        <br><br>
         <p style="font-size: 14px; color: #aaa;">From: {{ selectedMessage.senderName }}</p>
         <p style="font-size: 14px; color: #aaa;">{{convertDateFormat(selectedMessage.date)}}</p>
         <br>
@@ -198,6 +204,8 @@
         <el-divider></el-divider>
         <br>
         <p style="white-space: pre-wrap;">{{ selectedMessage.body }}</p>
+        <br><br><br><br><br>
+
 
       </div>
     </el-drawer>
@@ -209,7 +217,8 @@
 
 <script>
 import messageStore from "../store/messageStore.ts";
-import axios from "axios";
+import service from "../utils/request.ts";
+import locale from "element-plus/es/locale/lang/en";
 
 export default {
   data(){
@@ -276,7 +285,10 @@ export default {
             },
             trigger: 'blur'}
         ]
-      }
+      },
+
+      isloadingToStaff: false,
+      isloadingToUser: false
 
 
     }
@@ -297,6 +309,57 @@ export default {
   },
 
   methods:{
+
+    replyStaff(id, title, body, receiver_name, sender_name, date){
+      this.activeTabs = 'third';
+      this.drawer = false;
+
+      this.infoForm.receiverId = id;
+      this.infoForm.title = "RE: " + title;
+      this.infoForm.body = "\n\n\n\n----------------------- Below is the forwarded message --------------------------\n" + this.convertDateFormat(date) + " " + sender_name + " wrote: \n" + body
+    },
+
+    replyAdopter(id, title, body, receiver_name, sender_name, date){
+      this.activeTabs = 'fourth';
+      this.drawer = false;
+
+      this.sendToUserForm.receiverId = id;
+      this.sendToUserForm.title = "RE: " + title;
+      this.sendToUserForm.body = "\n\n\n\n----------------------- Below is the forwarded message --------------------------\n" + this.convertDateFormat(date) + " " + sender_name + " wrote: \n" + body
+    },
+
+    forward_mail(title, body, receiver_name, sender_name, date){
+      this.activeTabs = 'third';
+      this.drawer = false;
+
+      this.infoForm.receiverId = '';
+      this.infoForm.title = '';
+      this.infoForm.body = "\n\n\n\n----------------------- Below is the forwarded message --------------------------\n" +
+          "Sender: "+ sender_name+"\n"+
+          "Title: "+ title +"\n"+
+          "Date: "+this.convertDateFormat(date)+ "\n"+
+          "Receiver: "+ receiver_name
+          +"\n\n"+ body
+
+    },
+
+    forward_mail_adopter(title, body, receiver_name, sender_name, date, adopter_id){
+      this.activeTabs = 'third';
+      this.drawer = false;
+
+      this.infoForm.receiverId = '';
+      this.infoForm.title = '';
+      this.infoForm.body = "\n\n\n\n----------------------- Below is the forwarded message that sent to adopter--------------------------\n" +
+          "Staff: "+ sender_name+"\n"+
+          "Title: "+ title +"\n"+
+          "Date: "+this.convertDateFormat(date)+ "\n"+
+          "Adopter: "+ receiver_name + "\n"
+          +"Adopter ID: "+ adopter_id
+          +"\n\n"+ body
+
+    },
+
+
     resetInfoForm(){
       this.infoForm = {
         receiverId: '',
@@ -327,7 +390,7 @@ export default {
       this.selectedMessage = message;
       this.drawer = true;
 
-      axios.post("api/messages/read/" + message.messageId).then((res) => {
+      service.post("api/messages/read/" + message.messageId).then((res) => {
         if (res.data.msg !== "success"){
           console.error("Label as read failed")
         }
@@ -341,64 +404,79 @@ export default {
     },
 
     async onSubmitAdd(){
+      this.isloadingToStaff = true;
       this.$refs.form.validate(async (valid) => {
+
             if (valid) {
               await messageStore.sendMessageWebsocket(this.infoForm);
               await messageStore.fetchSentMessages();
 
-              ElNotification({
-                title: 'Success',
-                message: 'Sending message successfully',
-                type: 'success',
+              setTimeout(() => {
+                this.isloadingToStaff = false;
+                ElNotification({
+                  title: 'Success',
+                  message: 'Sending message successfully',
+                  type: 'success',
+                })
+              }, 1000)
+
+            } else {
+
+              setTimeout(() => {
+                this.isloadingToStaff = false;
+                ElNotification({
+                  title: 'Error',
+                  message: 'Failed in sending messages. This is may due to the non-exist of Staff id',
+                  type: 'error',
+                })
               })
 
-              this.resetInfoForm();
-            } else {
-              ElNotification({
-                title: 'Error',
-                message: 'Failed in sending messages. This is may due to the non-exist of Staff id',
-                type: 'error',
-              })
               return false;
             }
 
-            // this.resetInfoForm();
+            await this.resetInfoForm();
           }
-
       )
+      // this.resetInfoForm();
     },
 
     async onSubmitAddToUser(){
+
+      this.isloadingToUser = true;
 
       this.$refs.form.validate(async (valid) => {
             if (valid) {
               await messageStore.sendMessageWebsocket(this.sendToUserForm);
               await messageStore.fetchSentMessagesUser();
 
-              ElNotification({
-                title: 'Success',
-                message: 'Sending message successfully',
-                type: 'success',
-              })
-              this.resetSendToUserForm();
+              setTimeout(() => {
+                this.isloadingToUser = false;
+                ElNotification({
+                  title: 'Success',
+                  message: 'Sending message successfully',
+                  type: 'success',
+                })
+              }, 1000)
             } else {
-              ElNotification({
-                title: 'Error',
-                message: 'Failed in sending messages. This is may due to the non-exist of User id',
-                type: 'error',
+
+              setTimeout(() => {
+                this.isloadingToUser = false;
+                ElNotification({
+                  title: 'Error',
+                  message: 'Failed in sending messages. This is may due to the non-exist of User id',
+                  type: 'error',
+                })
               })
+
               return false;
             }
+        await this.resetSendToUserForm();
           }
       )
-
-      // this.resetSendToUserForm();
-
-
     },
 
     getAllStaff(){
-      axios.get("api/staffpage", {params: {pageSize:10000}})
+      service.get("api/staffpage", {params: {pageSize:10000}})
         .then((res) =>
             {this.all_staff = res.data.data.rows.map(staff => ({
               value: staff.firstName + ' ' + staff.lastName,
@@ -520,9 +598,15 @@ export default {
           "    Adopting a dog is a journey filled with love, challenges, and unforgettable moments, and we are confident that "+all_detail_remind.dog_name+" has found not just a home but a family with you. The bond you've already begun to form is the foundation of a lifelong companionship, and it's this unique connection that truly stood out to us during the adoption process.\n" +
           "    We believe that "+all_detail_remind.dog_name+" is not just a pet, but a companion who will bring joy, laughter, and comfort into your life. As you embark on this exciting new chapter together, remember that the bond you share is a precious gift, nurtured by patience, understanding, and a lot of love.\n"+
           "    Please know that we are here for you and "+all_detail_remind.dog_name+", ready to support you both through this transition and beyond. We encourage you to keep us updated on your adventures together and look forward to hearing about the wonderful moments you will undoubtedly share.\n"+
+          "    Adoption guide: You can come to our Shelter during any of our working hours to collect "+all_detail_remind.dog_name+ ". Notice that, if you do not come to our shelter and collect "+all_detail_remind.dog_name+ " within two weeks, we will treat this as giving up and you will not be able to collect anymore.\n"+
           "\nWarmest regards,\n" + "Dog Shelter Team"
 
       this.sendToUserForm.title = "Congratulations on Your New Furry Family Member!"
+    }
+
+    const all_detail_to_staff = this.$route.query.id_to_staff ? JSON.parse(this.$route.query.id_to_staff) : null;
+    if (all_detail_to_staff){
+      this.infoForm.receiverId = all_detail_to_staff;
     }
 
 

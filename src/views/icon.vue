@@ -16,38 +16,8 @@
 
       <el-col :span="16">
 
-        <!--    set 1-->
 
-        <el-card shadow="hover" style="height: 203px" v-if="showCard">
-          <template #header>
-            <div class="clearfix">
-              <span>Daily Feeding</span>
-              <el-button style="float: right; padding: 3px 0" text></el-button>
-            </div>
-          </template>
-
-          <el-table ref="myTable" :show-header="false" :data="todoList.feedingInfo"  style="width: 100%" height="100px">
-
-            <el-table-column>
-              <template #default="scope">
-                <div
-                    class="todo-item"
-                    :class="{
-										'todo-item-del': scope.row.status
-									}"
-                >
-                  <span>Feed the dog with id: {{ scope.row.dog_id}} with food type: {{scope.row.food_type}} and quantity: {{scope.row.quantity}} grams</span>
-
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
-
-        </el-card>
-
-        <br>
-
-        <el-card shadow="hover" style="height: 203px" v-if="showCard">
+        <el-card shadow="hover" style="height: 203px">
           <template #header>
             <div class="clearfix">
               <span>Daily Exercise</span>
@@ -65,7 +35,12 @@
 										'todo-item-del': scope.row.status
 									}"
                 >
-                  <span>Exercise type: {{scope.row.exerciseType}} scheduled on {{scope.row.date}} with duration {{scope.row.duration}} for dog id: {{scope.row.dog_id}}</span>
+                  <span>Exercise type: {{scope.row.exerciseType}} scheduled on </span>
+                  <span style="color: blueviolet"> {{transofmDateFormat(scope.row.date, 1)}}</span>
+                  <span>   with duration </span>
+                  <span style="color: blueviolet;"> {{scope.row.duration}}</span>
+                  <span> for dog id: </span>
+                  <span style="color: blueviolet"> {{scope.row.dog_id}}</span>
 
                 </div>
               </template>
@@ -73,9 +48,11 @@
           </el-table>
         </el-card>
 
+        <br>
+
 
 <!--        set 2-->
-        <el-card shadow="hover" style="height: 203px" v-if="!showCard">
+        <el-card shadow="hover" style="height: 203px">
           <template #header>
             <div class="clearfix">
               <span>Medication schedule</span>
@@ -93,7 +70,13 @@
 										'todo-item-del': scope.row.status
 									}"
                 >
-                  <span>The dog with id: {{scope.row.dog_id}} should take {{scope.row.medication_name}} with dosage of {{scope.row.dosage}} at {{scope.row.startDate}}</span>
+                  <span>The dog with id: </span>
+                    <span style="color: blueviolet">{{scope.row.dog_id}}</span>
+
+                  <span> should take  </span>
+                  <span style="color: blueviolet">{{scope.row.medication_name}} </span>
+                    <span> with dosage of </span>
+                  <span style="color: blueviolet"> {{scope.row.dosage}}</span>
 
                 </div>
               </template>
@@ -103,7 +86,7 @@
 
         <br>
 
-        <el-card shadow="hover" style="height: 203px" v-if="!showCard">
+        <el-card shadow="hover" style="height: 203px">
           <template #header>
             <div class="clearfix">
               <span>Grooming Schedule</span>
@@ -121,17 +104,16 @@
 										'todo-item-del': scope.row.status
 									}"
                 >
-                  <span>The dog with id {{scope.row.dog_id}} have a {{scope.row.type}} at {{scope.row.grooming_date}}</span>
+                  <span>The dog with id: </span>
+                  <span style="color: blueviolet"> {{scope.row.dog_id}} </span>
+                  <span> have a {{scope.row.type}} at </span>
+                   <span style="color: blueviolet">  {{transofmDateFormat(scope.row.grooming_date, 1)}}</span>
 
                 </div>
               </template>
             </el-table-column>
           </el-table>
         </el-card>
-
-        <br>
-
-        <el-button @click="this.toggleShowCard">Toggle Feeding and Exercise Cards</el-button>
 
 
       </el-col>
@@ -143,7 +125,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import service from "../utils/request.ts";
 import router from "../router/index.ts";
 
 export default {
@@ -187,19 +169,19 @@ export default {
         feeding_time_end : this.dateFormatEnd
       }
 
-      axios.get('/api/interaction/getMedication', {params:params1})
+      service.get('/api/interaction/getMedication', {params:params1})
           .then((res) => {
             this.todoList.medicationInfo = res.data.data.rows;
       }).catch(()=>{
         console.error("Fetch medication info failed")});
-      axios.get('/api/interaction/getGrooming', {params:params2})
+      service.get('/api/interaction/getGrooming', {params:params2})
           .then((res) => {this.todoList.groomingInfo = res.data.data.rows;}).catch(()=>{
         console.error("Error fetching grooming info")});
-      axios.get('/api/interaction/getExercise', {params:params3})
+      service.get('/api/interaction/getExercise', {params:params3})
           .then((res) => {this.todoList.exerciseInfo = res.data.data.rows;}).catch(()=>{
         console.error("Error fetching exercise info")
       });
-      axios.get('/api/interaction/getFeed', {params:params4})
+      service.get('/api/interaction/getFeed', {params:params4})
           .then((res) => {
             this.todoList.feedingInfo = res.data.data.rows;
           }
@@ -208,8 +190,32 @@ export default {
       });
     },
 
-    toggleShowCard: function (){
-      this.showCard = !this.showCard;
+    transofmDateFormat: function (inputDate, showTime=0) {
+
+      if (inputDate === null){
+        return "To be confirmed";
+      }
+
+
+      // Ensure inputDate is a valid date string
+      const date = new Date(inputDate);
+
+      // Get date and time components
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-based
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+
+      // Format the date and time components
+      const formattedDate = `${day}-${month}-${year}`;
+      const formattedTime = `${hours}:${minutes}`;
+
+      // Combine the formatted date and time
+      if (showTime === 0){
+        return `${formattedDate}`;
+      }
+      return `${formattedDate}  ${formattedTime}`;
     },
 
     viewDaywork: function (data){

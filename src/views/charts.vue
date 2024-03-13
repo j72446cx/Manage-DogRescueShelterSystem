@@ -14,9 +14,9 @@
 
             </template>
           </el-table-column>
-          <el-table-column label="Operation">
+          <el-table-column label="Operation" width="200px">
             <template v-slot="scope">
-              <el-button type="primary" @click="startReviewing(scope.row.id)" plain>Start Reviewing</el-button>
+              <el-button type="primary" @click="startReviewing(scope.row.id)" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)" plain>Start Reviewing</el-button>
             </template>
           </el-table-column>
 
@@ -32,23 +32,23 @@
           <el-table-column prop="dog_id" label="Dog ID"></el-table-column>
           <el-table-column label="Application Details">
             <template v-slot="scope">
-              <el-button type="text" @click="downloadPDF(scope.row.pdfURL)">
+              <el-button icon="Download" round @click="downloadPDF(scope.row.pdfURL)">
 
-                <el-icon><Download /></el-icon>
+
               </el-button>
             </template>
           </el-table-column>
-          <el-table-column label="Writing comment for Application Details" width="400px">
+          <el-table-column label="Comments" width="100px">
             <template v-slot="scope">
-              <el-button type="text" @click="getReviewingForm(scope.row)">Click to start or continue</el-button>
+              <el-button round icon="Edit" @click="getReviewingForm(scope.row)"></el-button>
             </template>
 
           </el-table-column>
 
-          <el-table-column label="Operation" width="200px">
+          <el-table-column label="Operation" width="300px">
             <template v-slot="scope">
-              <el-button @click="onAccept(scope.row)" type="success" round>Approve</el-button>
-              <el-button @click="onReject(scope.row)" type="danger" round>Reject</el-button>
+              <el-button icon="check" @click="onAccept(scope.row)" type="success" round>Approve</el-button>
+              <el-button icon="close" @click="onReject(scope.row)" type="danger" round>Reject</el-button>
             </template>
           </el-table-column>
 
@@ -71,11 +71,11 @@
 
           <el-table-column label="Operation on interview date" width="400">
             <template v-slot="scope">
-              <el-button type="primary" v-if="scope.row.interview_date !== null" @click="onAcceptApproved(scope.row)">Accept</el-button>
-              <el-button type="danger" v-if="scope.row.interview_date !== null" @click="sendMessageToUser(scope.row.adopter_id, scope.row.id, scope.row.dog_id, scope.row.interview_date)">Reject and send message to the adopter</el-button>
+              <el-button type="primary" icon="check" v-if="scope.row.interview_date !== null" @click="onAcceptApproved(scope.row)">Accept</el-button>
+              <el-button type="warning" icon="minus" v-if="scope.row.interview_date !== null" @click="sendMessageToUser(scope.row.adopter_id, scope.row.id, scope.row.dog_id, scope.row.interview_date)" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Refuse</el-button>
 
-              <el-button type="info" v-if="scope.row.interview_date === null" @click="hurryUp(scope.row.adopter_id, scope.row.id, scope.row.dog_id)">Send message to hurry him/her up</el-button>
-              <el-button type="danger" v-if="scope.row.interview_date === null" @click="onReject(scope.row)">Reject</el-button>
+              <el-button type="primary" icon="Position" v-if="scope.row.interview_date === null" @click="hurryUp(scope.row.adopter_id, scope.row.id, scope.row.dog_id)" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Send Message</el-button>
+              <el-button icon="close" type="danger" v-if="scope.row.interview_date === null" @click="onReject(scope.row)">Reject</el-button>
             </template>
           </el-table-column>
 
@@ -86,10 +86,10 @@
       <el-tab-pane :label="`Interviewing (${applicationInterviewing.length})`" name="fourth">
 
         <el-table :data="applicationInterviewing" :show-header="true" style="width: 100%">
-          <el-table-column prop="id" label="Application ID"></el-table-column>
-          <el-table-column prop="adopter_id" label="Adopter ID"></el-table-column>
+          <el-table-column prop="id" label="Application ID" width="120"></el-table-column>
+          <el-table-column prop="adopter_id" label="Adopter ID" width="120"></el-table-column>
           <el-table-column prop="dog_id" label="Dog ID"></el-table-column>
-          <el-table-column label="Interview Date" width="300">
+          <el-table-column label="Interview Date" width="200">
             <template v-slot="scope">
               <span>{{transofmDateFormat(scope.row.interview_date, 1)}}</span>
             </template>
@@ -98,27 +98,26 @@
           <el-table-column label="Interview Result" width="200px">
               <template v-slot="scope">
 
-                <el-button type="text" v-if="getInterviewStatus(scope.row.interview_date)" @click="onclickInterview(scope.row)">Click to write/modify notes</el-button>
-                <span v-else>Waiting for the Interview</span>
+                <el-button icon="Edit" round v-if="getInterviewStatus(scope.row.interview_date)" @click="onclickInterview(scope.row)"></el-button>
+                <span v-else>Waiting for Interview</span>
 
               </template>
           </el-table-column>
 
-          <el-table-column label="Application Details">
+          <el-table-column label="Application Details" width="200px">
             <template v-slot="scope">
-              <el-button type="text" @click="downloadPDF(scope.row.pdfURL)">
-
-                <el-icon><Download /></el-icon>
+              <el-button icon="Download" round @click="downloadPDF(scope.row.pdfURL)">
+<!--                <el-icon><Download /></el-icon>-->
               </el-button>
             </template>
           </el-table-column>
 
           <el-table-column label="Operation" width="400px">
             <template v-slot="scope">
-              <el-button type="primary" v-if="scope.row.haveCompetitor === false">Pass</el-button>
-              <el-button type="primary" v-if="scope.row.haveCompetitor === true && this.compareResult[scope.row.dog_id] === true" @click="pass_and_reject(scope.row)">Pass and Reject other competitors</el-button>
-              <el-button type="info" v-if="scope.row.haveCompetitor === true && this.compareResult[scope.row.dog_id] === false">Waiting for competitor</el-button>
-              <el-button type="danger" @click="onReject(scope.row)">Reject</el-button>
+              <el-button type="primary" icon="check" v-if="scope.row.haveCompetitor === false" @click="pass(scope.row)">Pass</el-button>
+              <el-button type="primary" icon="check" v-if="scope.row.haveCompetitor === true && this.compareResult[scope.row.dog_id] === true" @click="pass_and_reject(scope.row)">Pass and Reject other competitors</el-button>
+              <el-button type="info" icon="coffee-cup" v-if="scope.row.haveCompetitor === true && this.compareResult[scope.row.dog_id] === false">Waiting for competitor</el-button>
+              <el-button type="danger" icon="close" @click="onReject(scope.row)">Reject</el-button>
 
             </template>
           </el-table-column>
@@ -134,20 +133,21 @@
 
           <el-table-column label="Contact information">
             <template v-slot="scope">
-              <el-icon @click="contact_info_pre(scope.row.adopter_id)"><List /></el-icon>
+              <el-button type="warning" icon="List" round @click="contact_info_pre(scope.row.adopter_id)" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)"></el-button>
+<!--              <el-icon @click="contact_info_pre(scope.row.adopter_id)"><List /></el-icon>-->
             </template>
           </el-table-column>
 
           <el-table-column width="300px" label="Send message">
             <template v-slot="scope">
-              <el-button type="text" @click="sendRemind(scope.row.adopter_id, scope.row.id, scope.row.dog_id)">Send Message to remind the adopter</el-button>
+              <el-button type="primary" round icon="Position" @click="sendRemind(scope.row.adopter_id, scope.row.id, scope.row.dog_id)" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Send</el-button>
             </template>
           </el-table-column>
 
-          <el-table-column label="Collection confirmation">
+          <el-table-column label="Collection Confirmation">
             <template v-slot="scope">
-              <el-icon color="green" size="30px" @click="collection_confirm(scope.row)" style="margin-right: 40px;"><SuccessFilled /></el-icon>
-              <el-icon color="red" size="30px"><CircleCloseFilled /></el-icon>
+              <el-icon color="green" size="30px" @click="collection_confirm_a(scope.row)" style="margin-right: 40px;"><SuccessFilled /></el-icon>
+              <el-icon color="red" size="30px" @click="collection_failed_methods(scope.row)"><CircleCloseFilled /></el-icon>
 
             </template>
           </el-table-column>
@@ -202,7 +202,7 @@
       <template #footer>
         <div style="text-align: right;">
           <el-button @click="dialog_reviewing_visible = false">Cancel</el-button>
-          <el-button type="primary" @click="saveReviewingForm">Save</el-button>
+          <el-button type="primary" @click="saveReviewingForm" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Save</el-button>
         </div>
       </template>
     </el-dialog>
@@ -211,17 +211,24 @@
     <el-dialog title="Approve Confirmation" v-model="dialog_accept_visible">
       <span>Please make sure all application details have been investigated and commented.</span>
       <br><br><br>
-      <el-button type="primary" @click="acceptConfirm(this.temp_object)">Yes I confirm and submit</el-button>
-      <el-button type="info" @click="this.dialog_reject_visible = false">Cancel</el-button>
+      <el-button type="primary" @click="acceptConfirm(this.temp_object)" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Yes I confirm and submit</el-button>
+      <el-button type="info" @click="this.dialog_accept_visible = false">Cancel</el-button>
 
     </el-dialog>
 
     <el-dialog title="Approve Confirmation" v-model="dialog_accept_approved_visible">
-      <span>Are you sure you want to accpet this interview date?</span>
+      <span>Are you sure you want to accept this interview date?</span>
       <br><br><br>
-      <el-button type="primary" @click="acceptConfirmApproved(this.temp_object)">Yes I confirm and submit</el-button>
+      <el-button type="primary" @click="acceptConfirmApproved(this.temp_object)" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Yes I confirm and submit</el-button>
       <el-button type="info" @click="this.dialog_accept_approved_visible = false">Cancel</el-button>
 
+    </el-dialog>
+
+    <el-dialog title="Confirmation" v-model="dialog_interview_pass_visible">
+      <span> Are you sure you want to make it pass?</span>
+      <br><br><br>
+      <el-button type="primary" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)" @click="pass_confirm">Yes I confirm and submit</el-button>
+      <el-button type="info" @click="this.dialog_interview_pass_visible = false">Cancel</el-button>
     </el-dialog>
 
     <el-dialog title="Reject Confirmation" v-model="dialog_reject_visible">
@@ -231,7 +238,7 @@
       <el-input v-model="reject_reason" type="textarea" placeholder="Please fill in the reasons for rejection"></el-input>
       <br><br><br>
 
-      <el-button type="primary" @click="rejectConfirm(this.temp_object, this.reject_reason)">Yes I confirm and submit</el-button>
+      <el-button type="primary" @click="rejectConfirm(this.temp_object, this.reject_reason)" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Yes I confirm and submit</el-button>
       <el-button type="info" @click="this.dialog_reject_visible = false">Cancel</el-button>
 
     </el-dialog>
@@ -270,7 +277,7 @@
       <div style="text-align: center">
         <el-button type="info" @click="this.step_interview--" v-if="step_interview > 0" round>Back</el-button>
       <el-button type="primary" @click="this.step_interview++" round v-if="step_interview < 2">Next</el-button>
-        <el-button type="success" @click="submitInterviewConform" round v-if="step_interview===2">Submit</el-button>
+        <el-button type="success" @click="submitInterviewConform" round v-if="step_interview===2" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Submit</el-button>
 
       </div>
     </el-dialog>
@@ -279,7 +286,7 @@
       <span>This process is irreversible, please confirm all the details have been investigated. After doing this, please send messages to the rejected adopters to explain this.</span>
       <br><br><br>
       <div style="text-align: center">
-        <el-button type="success" round @click="pass_rejct_confirm">Yes, I confirm and submit</el-button>
+        <el-button type="success" round @click="pass_rejct_confirm" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Yes, I confirm and submit</el-button>
         <el-button type="info" @click="dialog_interview_pass_reject=false" round>I need double check</el-button>
       </div>
     </el-dialog>
@@ -290,12 +297,30 @@
         <el-form-item label="Adopter Email: ">{{this.temp_adopter_email}}</el-form-item>
         <el-form-item label="Adopter Phone Number: ">{{this.temp_adopter_tel}}</el-form-item>
 
-
       </el-form>
+    </el-dialog>
 
+    <el-dialog title="Collection Confirmation" v-model="collection_dialog_confirm">
+      <span> Are you sure the dog has been collected by its adopter? </span>
+      <br><br><br>
+      <el-button type="primary" @click="collection_confirm" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Yes I confirm</el-button>
+      <el-button @click="collection_dialog_confirm=false">Cancel</el-button>
+    </el-dialog>
 
+    <el-dialog title="Collection Failed Report" v-model="dialog_not_collect">
+      <span>Are you sure the collection is failed? If you confirm, it will reject the application immediately and the dog becomes available again.</span>
+      <br><br><br>
+
+          <el-input v-model="reject_reason" type="textarea" placeholder="Please fill in the reasons for rejection."></el-input>
+
+      <br><br><br>
+
+      <el-button type="primary" @click="collection_failed" v-loading.fullscreen.lock="isloading" element-loading-text="Loading..." element-loading-background="rgba(0, 0, 0, 0.8)">Yes I confirm and submit</el-button>
+      <el-button type="info" @click="dialog_not_collect = false">Cancel</el-button>
 
     </el-dialog>
+
+
 
 
   </div>
@@ -304,7 +329,7 @@
 
 <script>
 import messageStore from "../store/messageStore.ts";
-import axios from "axios";
+import service from "../utils/request.ts";
 import router from "../router/index.ts";
 
 export default {
@@ -330,6 +355,7 @@ export default {
       dialog_reject_visible: false,
       dialog_interview_visible: false,
       dialog_interview_pass_reject: false,
+      dialog_interview_pass_visible: false,
       temp_object : '',
       interview_form: [],
 
@@ -347,25 +373,44 @@ export default {
 
         temp_adopter_name: '',
         temp_adopter_email: '',
-        temp_adopter_tel: ''
+        temp_adopter_tel: '',
 
+      isloading: false,
 
+      collection_dialog_confirm: false,
 
-
-
+      dialog_not_collect: false
 
     }
 
   },
 
   methods:{
+    collection_failed_methods(row){
+      this.temp_object = row;
+      this.dialog_not_collect= true;
+    },
+
+
+    pass(row){
+
+      this.dialog_interview_pass_visible = true;
+      this.temp_object = row;
+
+    },
+
+    collection_confirm_a(row){
+      this.temp_object = row;
+      this.collection_dialog_confirm = true;
+    }
+    ,
 
     getPendingApplication() {
       const params={
         status: "Pending"
       };
 
-      axios.get("api/adopter/application/status", {params:params})
+      service.get("api/adopter/application/status", {params:params})
       .then((res) => {
 
         if (res.data.data !== []){
@@ -381,7 +426,7 @@ export default {
         status: "Reviewing"
       };
 
-      axios.get("api/adopter/application/status", {params:params})
+      service.get("api/adopter/application/status", {params:params})
           .then((res) => {
 
             if (res.data.data !== []){
@@ -401,7 +446,7 @@ export default {
         status: "Approved"
       };
 
-      axios.get("api/adopter/application/status", {params:params})
+      service.get("api/adopter/application/status", {params:params})
           .then((res) => {
 
             if (res.data.data !== []){
@@ -419,7 +464,7 @@ export default {
         status: "Adoption Pending"
       };
 
-      axios.get("api/adopter/application/status", {params:params})
+      service.get("api/adopter/application/status", {params:params})
           .then((res) => {
 
             if (res.data.data !== []){
@@ -437,7 +482,7 @@ export default {
         status: "Adopted"
       };
 
-      axios.get("api/adopter/application/status", {params:params})
+      service.get("api/adopter/application/status", {params:params})
           .then((res) => {
 
             if (res.data.data !== []){
@@ -455,7 +500,7 @@ export default {
         status: "Await"
       };
 
-      axios.get("api/adopter/application/status", {params:params})
+      service.get("api/adopter/application/status", {params:params})
           .then((res) => {
 
             if (res.data.data !== []){
@@ -511,39 +556,53 @@ export default {
     },
 
     startReviewing(id){
-      const params={
-        id: id,
-        status: "Reviewing"
-      };
 
-      const reviewingForm = {
-        application_id : id
-      }
+      this.isloading = true;
+      setTimeout(() => {
 
-      axios.put("api/adopter/application/editForm", params).then((res) => {
-        if (res.data.msg === "success"){
-          console.log("Successfully start reviewing");
+        const params={
+          id: id,
+          status: "Reviewing"
+        };
+
+        const reviewingForm = {
+          application_id : id
         }
-        else{
-          console.error("Error when start reviewing");
-        }
-      }).then(() =>{
-        this.getPendingApplication();
-      }).then(() => {
-        this.getReviewingApplication();
-      }).then(() => {
-        axios.post("api/reviewing/save", reviewingForm).then((res) => {
+
+        service.put("api/adopter/application/editForm", params).then((res) => {
+
           if (res.data.msg === "success"){
-            console.log("Created new reviewing form");
+            console.log("Successfully start reviewing");
           }
           else{
-            console.error("Error when creating a new reviewing form");
+            console.error("Error when start reviewing");
           }
-        }).catch((err) => console.log("Error appeared when posting new reviewing form : ", err));
-      })
-          .catch((err) => {
-        console.log("Error reviewing: ", err);
-      });
+
+
+        }).then(() =>{
+          this.getPendingApplication();
+        }).then(() => {
+          this.getReviewingApplication();
+        }).then(() => {
+          service.post("api/reviewing/save", reviewingForm).then((res) => {
+
+            setTimeout(() => {
+
+              if (res.data.msg === "success"){
+                console.log("Created new reviewing form");
+              }
+              else{
+                console.error("Error when creating a new reviewing form");
+              }
+            }, 1000)
+
+          }).catch((err) => console.log("Error appeared when posting new reviewing form : ", err));
+        })
+            .catch((err) => {
+              console.log("Error reviewing: ", err);
+            }).finally(() => this.isloading = false);
+
+      }, 500)
 
 
 
@@ -554,7 +613,7 @@ export default {
           application_id: row.id
         }
 
-        axios.get("api/reviewing", {params:param}).then((res) => {
+        service.get("api/reviewing", {params:param}).then((res) => {
           if (res.data.data !== []){
             this.reviewing_form = res.data.data[0];
             this.reviewing_form.staff_id = localStorage.getItem("ms_id");
@@ -573,15 +632,20 @@ export default {
     },
 
     saveReviewingForm(){
-      axios.put("api/reviewing/edit", this.reviewing_form).then((res) => {
-        if (res.data.msg === "success"){
-          console.log("Saving reviewing form successfully!");
-          this.$message({
-            message: 'Saved Successfully',
-            type: 'success'
-          })
-          this.dialog_reviewing_visible = false
-        }
+      this.isloading= true;
+      service.put("api/reviewing/edit", this.reviewing_form).then((res) => {
+        setTimeout(() => {
+          this.isloading = false;
+          if (res.data.msg === "success"){
+            console.log("Saving reviewing form successfully!");
+            this.$message({
+              message: 'Saved Successfully',
+              type: 'success'
+            })
+            this.dialog_reviewing_visible = false
+          }
+        }, 700)
+
       }).catch((err) => console.log("Error appear when saving reviewing form: ", err));
     },
 
@@ -604,7 +668,7 @@ export default {
       this.temp_review_info.dog_id = row.dog_id;
       this.temp_review_info.adopter_id = row.adopter_id;
       this.temp_review_info.application_id = row.id;
-      axios.get("api/interview", {params: {application_id: row.id}}).then((res) => {
+      service.get("api/interview", {params: {application_id: row.id}}).then((res) => {
         this.interview_form = res.data.data[0];
         this.dialog_interview_visible = true;
       })
@@ -612,6 +676,7 @@ export default {
     },
 
     rejectConfirm(row,reason){
+      this.isloading = true;
 
       if (!this.reject_reason.trim()) {
         this.$message.error('Please fill in the reasons for rejection.');
@@ -622,42 +687,58 @@ export default {
       delete payload.created_date;
       payload.status="Rejected";
       payload.reject_reason = reason;
-      axios.put("api/adopter/application/editForm", payload).then((res) => {
-        if(res.data.msg === "success"){
-          console.log("Rejected successfully");
-          this.$message({
-            message: "Rejected successfully",
-            type:"success"
-          });
-          this.dialog_reject_visible = false;
-          this.getReviewingApplication();
-          this.getAwaitInterviewApplication();
-          this.getApprovedApplication();
-        }
-      }).catch((err) => {
+      service.put("api/adopter/application/editForm", payload).then((res) => {
+        setTimeout(() => {
+          this.isloading = false;
+          if(res.data.msg === "success"){
+            console.log("Rejected successfully");
+            this.$message({
+              message: "Rejected successfully",
+              type:"success"
+            });
+            this.dialog_reject_visible = false;
+            this.getReviewingApplication();
+            this.getAwaitInterviewApplication();
+            this.getApprovedApplication();
+            this.sendRejectReasonToUser(payload.adopter_id, payload.id, payload.dog_id);
+          }
+        }, 700)
+
+      })
+          .catch((err) => {
         console.log("Error when rejecting: ", err);
-      }).then(() => {
-        console.log(payload)
-        this.sendRejectReasonToUser(payload.adopter_id, payload.id, payload.dog_id);
       })
     },
 
+    collection_failed(){
+      this.rejectConfirm(this.temp_object, this.reject_reason);
+      service.put("api/dogpage/edit", {id: this.temp_object.dog_id, adoptStatus: "Available"}).then((res) => {
+
+      }).catch((err) => console.log("Error when editing: ", err))
+
+    },
+
     acceptConfirm(row){
+      this.isloading = true;
 
       let payload = {...row};
 
       delete payload.created_date;
       payload.status = "Approved";
-      axios.put("api/adopter/application/editForm", payload).then((res) => {
-        if(res.data.msg === "success"){
-          console.log("Approved successfully");
-          this.$message({
-            message: "Approved successfully",
-            type:"success"
-          });
-          this.dialog_accept_visible = false;
+      service.put("api/adopter/application/editForm", payload).then((res) => {
+        setTimeout(() => {
+          this.isloading= false;
+          if(res.data.msg === "success"){
+            console.log("Approved successfully");
+            this.$message({
+              message: "Approved successfully",
+              type:"success"
+            });
+            this.dialog_accept_visible = false;
 
-        }
+          }
+        }, 700)
+
       }).then(() =>{
             this.getReviewingApplication();
             this.getApprovedApplication();
@@ -670,68 +751,92 @@ export default {
 
     acceptConfirmApproved(row){
 
-      let payload = {...row};
-      delete payload.created_date;
-      payload.status = "Await";
-      axios.put("api/adopter/application/editForm", payload).then((res) => {
-        if(res.data.msg === "success"){
-          console.log("Accept successfully");
-          this.$message({
-            message: "Accept successfully",
-            type:"success"
-          });
-          this.dialog_accept_approved_visible = false;
-        }
-        else{
-          console.log("Accept failed");
-          this.$message.error("Failed in accept, please contact IT service")
-        }
-      }).then(() => {
-            this.getApprovedApplication();
-            this.getAwaitInterviewApplication();
-      }
+      this.isloading = true;
 
-          ).then(() => {
-        axios.post("api/interview/save", {application_id: payload.id})
-      })
-          .catch((err) => {
-        console.log("Error when approving: ", err);
-      })
+      setTimeout(() => {
+        let payload = {...row};
+        delete payload.created_date;
+        payload.status = "Await";
+        service.put("api/adopter/application/editForm", payload).then((res) => {
+
+          if(res.data.msg === "success"){
+            console.log("Accept successfully");
+            this.$message({
+              message: "Accept successfully",
+              type:"success"
+            });
+            this.dialog_accept_approved_visible = false;
+          }
+          else{
+            console.log("Accept failed");
+            this.$message.error("Failed in accept, please contact IT service")
+          }
+
+        }).then(() => {
+              this.getApprovedApplication();
+              this.getAwaitInterviewApplication();
+            }
+
+        ).then(() => {
+          service.post("api/interview/save", {application_id: payload.id});
+        })
+            .catch((err) => {
+              console.log("Error when approving: ", err);
+            }).finally(() => this.isloading = false)
+
+      }, 700)
+
     },
 
     submitInterviewConform(){
-      this.interview_form.staff_id = localStorage.getItem("ms_id");
-      axios.put("api/interview/edit", this.interview_form).then((res) => {
-        if (res.data.msg === "success"){
-          console.log("Submit interview successfully");
-          this.$message({
-            message: "Submit successfully",
-            type:"success"
-          });
-          this.dialog_interview_visible = false;
-          this.step_interview = 0;
-        }
-        else{
-          this.$message.error("Failed in submitting interview, please contact IT service")
-          this.dialog_interview_visible = false;
-          this.step_interview = 0;
-        }
-      }).then(() => this.getAwaitInterviewApplication()).catch((err) => console.log("Error when submitting interview form: ", err));
+      this.isloading = true;
+
+      setTimeout(() => {
+
+        this.interview_form.staff_id = localStorage.getItem("ms_id");
+        service.put("api/interview/edit", this.interview_form).then((res) => {
+          if (res.data.msg === "success"){
+            console.log("Submit interview successfully");
+            this.$message({
+              message: "Submit successfully",
+              type:"success"
+            });
+            this.dialog_interview_visible = false;
+            this.step_interview = 0;
+          }
+          else{
+            this.$message.error("Failed in submitting interview, please contact IT service")
+            this.dialog_interview_visible = false;
+            this.step_interview = 0;
+          }
+        }).then(() => this.getAwaitInterviewApplication()).catch((err) => console.log("Error when submitting interview form: ", err))
+        .catch((err) => console.log("error when submitting: ", err))
+        .finally((this.isloading = false));
+
+
+      }, 700)
+
     },
 
     sendMessageToUser(adopter_id, application_id, dog_id, interview_date){
 
-      axios.get("api/customer/"+ adopter_id).then((res) => {
-        let adopter_name = res.data.data.firstName;
+      this.isloading = true;
 
-        const all_detail = JSON.stringify({
-          application_id, dog_id, interview_date, adopter_name
-        });
+      service.get("api/customer/"+ adopter_id).then((res) => {
+        setTimeout(() => {
+          this.isloading = false;
+          let adopter_name = res.data.data.firstName;
 
-        this.$router.push({ path: '/tabs', query: { tab: 'fourth', all_detail, userId: adopter_id } })
+          const all_detail = JSON.stringify({
+            application_id, dog_id, interview_date, adopter_name
+          });
+
+          this.$router.push({ path: '/tabs', query: { tab: 'fourth', all_detail, userId: adopter_id } })
+
+        }, 700)
 
       }).then(() => {
-          axios.put("api/adopter/application/editForm", {id: application_id, interview_date: null}).catch((err) => {
+          service.put("api/adopter/application/editForm", {id: application_id, interview_date: null}).catch((err) => {
             console.log("Error appear when editing form: ", err);
           })
       })
@@ -742,7 +847,7 @@ export default {
 
     sendRejectReasonToUser(adopter_id, application_id, dog_id){
       console.log("application_id is: ", application_id)
-      axios.get("api/customer/" + adopter_id).then((res) => {
+      service.get("api/customer/" + adopter_id).then((res) => {
         let adopter_name = res.data.data.firstName;
         const all_detail_reject = JSON.stringify({
           application_id, dog_id, adopter_name
@@ -754,43 +859,53 @@ export default {
     },
 
     hurryUp(adopter_id, application_id, dog_id){
+      this.isloading = true;
+      setTimeout(() => {
+        service.get("api/customer/"+ adopter_id).then((res) => {
+          let adopter_name = res.data.data.firstName;
 
-      axios.get("api/customer/"+ adopter_id).then((res) => {
-        let adopter_name = res.data.data.firstName;
+          const all_detail_hurry = JSON.stringify({
+            application_id, dog_id, adopter_name
+          });
 
-        const all_detail_hurry = JSON.stringify({
-          application_id, dog_id, adopter_name
-        });
+          this.$router.push({ path: '/tabs', query: { tab: 'fourth', all_detail_hurry, userId: adopter_id } })
 
-        this.$router.push({ path: '/tabs', query: { tab: 'fourth', all_detail_hurry, userId: adopter_id } })
+        })
 
-      })
+            .catch((err) => console.log("error when fetching name: ", err))
+        .finally(() => this.isloading = false)
+      }, 700)
 
-          .catch((err) => console.log("error when fetching name: ", err))
 
 
     },
 
-
-
     async sendRemind(adopter_id, application_id, dog_id){
-      try{
-        const res = await axios.get(`api/customer/${adopter_id}`);
-        let adopter_name = res.data.data.firstName;
+      this.isloading = true;
 
-        const secondRes = await axios.get(`api/dogpage/${dog_id}`);
-        let dog_name = secondRes.data.data.name;
+      setTimeout(async () => {
+        try {
+          const res = await service.get(`api/customer/${adopter_id}`);
+          let adopter_name = res.data.data.firstName;
 
-        const all_detail_remind = JSON.stringify({
-          application_id, dog_id, adopter_name, dog_name
-        });
+          const secondRes = await service.get(`api/dogpage/${dog_id}`);
+          let dog_name = secondRes.data.data.name;
 
-        this.$router.push({ path: '/tabs', query: { tab: 'fourth', all_detail_remind, userId: adopter_id } })
+          const all_detail_remind = JSON.stringify({
+            application_id, dog_id, adopter_name, dog_name
+          });
+
+          this.$router.push({path: '/tabs', query: {tab: 'fourth', all_detail_remind, userId: adopter_id}});
+
+          this.isloading = false;
 
 
-      }catch (err){
-        console.log("error when fetching data", err);
-      }
+        } catch (err) {
+          console.log("error when fetching data", err);
+        }
+
+      }, 700)
+
     },
 
     getInterviewStatus(time){
@@ -806,7 +921,7 @@ export default {
       try{
 
 
-        const res = await axios.get("api/adopter/application/byDog/"+ dog_id);
+        const res = await service.get("api/adopter/application/byDog/"+ dog_id);
         let result = true;
         for (let i = 0; i < res.data.data.length; i++) {
           if (res.data.data[i].status !== "Await" || res.data.data[i].interview_date === null || new Date(res.data.data[i].interview_date ) > new Date()){
@@ -826,35 +941,68 @@ export default {
       this.temp_object = row;
     },
 
-    pass_rejct_confirm(){
-      let payload = {...this.temp_object};
-      delete payload.created_date;
-      payload.status = "Adoption Pending"
-      const temp_id = payload.id;
-      const temp_dog_id = payload.dog_id;
-      axios.put("api/adopter/application/editForm", payload).then((res) => {
-        if (res.data.msg === "success"){
-          console.log("Passed successfully");
-          this.$message({
-            message: "Submit successfully",
-            type:"success"
-          });
-          this.dialog_interview_pass_reject = false;
-        }
-        else{
-          console.log("Pass failed")
-          this.$message.error("Failed in submitting, please contact IT service");
-          this.dialog_interview_pass_reject = false;
-        }
+    pass_confirm(){
+      this.isloading = true;
+      setTimeout(() => {
+
+        let payload = {...this.temp_object};
+        delete payload.created_date;
+            payload.status = "Adoption Pending"
+            service.put("api/adopter/application/editForm", payload).then((res) => {
+              if (res.data.msg === "success"){
+                console.log("Passed successfully");
+                this.$message({
+                  message: "Submit successfully",
+                  type:"success"
+                });
+                this.dialog_interview_pass_visible = false;
+              }
+              else{
+                console.log("Pass failed")
+                this.$message.error("Failed in submitting, please contact IT service");
+                this.dialog_interview_pass_visible = false;
+              }
       }).then(() => {
-        let payload_2 = this.applicationInterviewing.filter(item => !(item.id === payload.id || item.dog_id !== temp_dog_id))
-        .map(item => ({...item, status:"Rejected"}));
+              this.getAwaitInterviewApplication();
+              this.getAdoptionPendingApplication();
+            })
+                .catch((err) => console.log("Error when pass: ", err)).finally(() => this.isloading = false)}, 700)
+    },
 
-        let update_promise = payload_2.map(item => {
-          return axios.put("api/adopter/application/editForm", item);
-        });
 
-        Promise.all(update_promise).then((res) => {
+    pass_rejct_confirm(){
+
+      this.isloading = true;
+
+      setTimeout(() => {
+        let payload = {...this.temp_object};
+        delete payload.created_date;
+        payload.status = "Adoption Pending"
+        const temp_id = payload.id;
+        const temp_dog_id = payload.dog_id;
+        service.put("api/adopter/application/editForm", payload).then((res) => {
+          if (res.data.msg === "success"){
+            console.log("Passed successfully");
+            this.$message({
+              message: "Submit successfully",
+              type:"success"
+            });
+            this.dialog_interview_pass_reject = false;
+          }
+          else{
+            console.log("Pass failed")
+            this.$message.error("Failed in submitting, please contact IT service");
+            this.dialog_interview_pass_reject = false;
+          }
+        }).then(() => {
+          let payload_2 = this.applicationInterviewing.filter(item => !(item.id === payload.id || item.dog_id !== temp_dog_id))
+              .map(item => ({...item, status:"Rejected"}));
+
+          let update_promise = payload_2.map(item => {
+            return service.put("api/adopter/application/editForm", item);
+          });
+
+          Promise.all(update_promise).then((res) => {
 
             console.log("Successfully reject other competitors");
             this.$message({
@@ -862,77 +1010,95 @@ export default {
               type: "success"
             })
 
-        }).then(() => {
-          this.getAwaitInterviewApplication();
-          this.getAdoptionPendingApplication();
+          }).then(() => {
+            this.getAwaitInterviewApplication();
+            this.getAdoptionPendingApplication();
 
-        }).then(() => {
-          let dog_id = payload.dog_id;
+          }).then(() => {
+            let dog_id = payload.dog_id;
 
-          let dog = {
-            "id": dog_id,
-            "adoptStatus": "Reserved"
-          }
-
-          axios.put("api/dogpage/edit", dog).then((res) => {
-            if (res.data.msg === "success"){
-              console.log("Dog Reserved successfully");
+            let dog = {
+              "id": dog_id,
+              "adoptStatus": "Reserved"
             }
 
-          })
+            service.put("api/dogpage/edit", dog).then((res) => {
+              if (res.data.msg === "success"){
+                console.log("Dog Reserved successfully");
+              }
 
-        })
-            .catch((err) => console.log("error when rejecting competitors: ", err));
-      }).catch((err) => console.log("error when submitting: ", err));
+            })
+
+          })
+              .catch((err) => console.log("error when rejecting competitors: ", err));
+        }).catch((err) => console.log("error when submitting: ", err))
+        .finally(() => this.isloading = false);
+
+      }, 700)
+
     },
 
     contact_info_pre(adopter_id){
-      this.contact_info(adopter_id);
-      this.dialog_contact_info_visible = true;
+      this.isloading = true;
+      setTimeout(() => {
+        this.isloading = false;
+        this.contact_info(adopter_id);
+        this.dialog_contact_info_visible = true;
+      }, 300)
+
     },
 
     async contact_info(adopter_id){
-      const res = await axios.get(`api/customer/${adopter_id}`);
+      const res = await service.get(`api/customer/${adopter_id}`);
       this.temp_adopter_name = res.data.data.firstName;
       this.temp_adopter_email = res.data.data.email;
       this.temp_adopter_tel = res.data.data.phoneNumber;
 
     },
 
-    async collection_confirm(row){
-      let payload = {...row}
-      delete payload.created_date;
-      payload.status = "Adopted"
-      axios.put("api/adopter/application/editForm", payload).then((res) => {
-        if (res.data.msg === "success"){
-          console.log("Submit successfully");
-          this.$message({
-            message: "Submit successfully",
-            type:"success"
-          });
-        }
-        else{
-          console.log("Pass failed")
-          this.$message.error("Failed in submitting, please contact IT service");
-        }
-      }).then(() => this.getAdoptionPendingApplication())
-          .then(() => {
+    async collection_confirm(){
+      this.isloading = true;
+      setTimeout(() => {
+
+        let payload = {...this.temp_object}
+        delete payload.created_date;
+        payload.status = "Adopted"
+        service.put("api/adopter/application/editForm", payload).then((res) => {
+          if (res.data.msg === "success"){
+            console.log("Submit successfully");
+            this.$message({
+              message: "Submit successfully",
+              type:"success"
+            });
+          }
+          else{
+            console.log("Pass failed")
+            this.$message.error("Failed in submitting, please contact IT service");
+          }
+
+          this.collection_dialog_confirm = false;
+        }).then(() => this.getAdoptionPendingApplication())
+            .then(() => {
               let dog_id = payload.dog_id;
 
               let dog = {
                 "id": dog_id,
-                "adoptStatus": "Adopted"
+                "adoptStatus": "Adopted",
+                "adoptedDate": new Date()
               }
 
-              axios.put("api/dogpage/edit", dog).then((res) => {
+              service.put("api/dogpage/edit", dog).then((res) => {
                 if (res.data.msg === "success"){
                   console.log("Dog adopted successfully");
                 }
 
               }).catch((err) => console.log("error when upadting dog: ", err));
 
-      })
-          .catch((err) => console.log("Error when editing form: ", err));
+            })
+            .catch((err) => console.log("Error when editing form: ", err)).finally(() => this.isloading = false);
+
+      }, 500)
+
 
     }
   },
@@ -948,6 +1114,7 @@ export default {
     this.getPendingApplication();
     this.getReviewingApplication();
     this.getAwaitInterviewApplication();
+
 
 
   },

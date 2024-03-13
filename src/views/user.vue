@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<el-row :gutter="20">
+		<el-row :gutter="50">
 			<el-col :span="12">
 				<el-card shadow="hover">
 					<template #header>
@@ -11,8 +11,8 @@
 					<div class="info">
 						<div class="info-image">
 							<el-avatar :size="100" :src="this.imgurl" />
-							<span class="info-edit">
-								<i class="el-icon-lx-camerafill"></i>
+							<span class="info-edit"  @click="this.avatar_change_dialog = true">
+								<i class="el-icon-lx-camerafill" ></i>
 							</span>
 						</div>
 						<div class="info-name">{{ firstname }}</div>
@@ -46,8 +46,80 @@
 						</el-form-item>
 					</el-form>
 				</el-card>
+        <br>
+        <el-card shadow="hover">
+          <template #header>
+            <div class="clearfix">
+              <span>Personal Information Edition</span>
+            </div>
+          </template>
+
+          <el-form label-width="200px">
+
+            <el-form-item label="Email: ">
+              <el-input v-model="info_edit.email"></el-input>
+            </el-form-item>
+
+            <el-form-item label="Address: ">
+              <el-input v-model="info_edit.address"></el-input>
+            </el-form-item>
+
+            <el-form-item label="Postcode: ">
+              <el-input v-model="info_edit.postCode"></el-input>
+            </el-form-item>
+
+            <el-form-item label="TEL: ">
+              <el-input v-model="info_edit.phoneNumber"></el-input>
+            </el-form-item>
+
+            <el-form-item label="Emergency Contact: ">
+              <el-input v-model="info_edit.emergency_Contact"></el-input>
+            </el-form-item>
+
+            <el-form-item>
+              <el-button type="primary" @click="onSubmitPersonalInfo">Save</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
 			</el-col>
+
+
 		</el-row>
+
+    <el-dialog v-model="avatar_change_dialog" title="Avatar change">
+
+      <el-form>
+        <br>
+        <el-form-item label="New avatar: ">
+
+          <el-upload drag
+                     action="api/upload"
+                     name = "image"
+                     :file-list="fileListAvatar"
+                     :on-preview="handlePreviewAvatar"
+                     :on-remove="handleRemoveAvatar"
+                     :on-exceed="handleExceedAvatar"
+                     :on-success="handleSuccessAvatar">
+            <el-button v-if="fileListAvatar === 0" size="small" type="primary">Click/Drag to upload your photo</el-button>
+            <div v-if="fileListAvatar.length === 0" slot="tip" class="el-upload__tip">Only one photo can be uploaded</div>
+
+            <div v-if="fileListAvatar.length !== 0" slot="tip" class="el-upload__tip">
+              <el-icon color="green"><Select /></el-icon> <span style="color: #00a854">Uploaded Successfully</span>
+              <br>
+              If you want to upload another photo, please delete the previous one at first!
+            </div>
+          </el-upload>
+
+
+        </el-form-item>
+        <br>
+        <el-form-item>
+          <el-button type="primary" @click="onSubmitAvatar" round>Submit</el-button>
+        </el-form-item>
+      </el-form>
+
+
+    </el-dialog>
 
 	</div>
 </template>
@@ -55,7 +127,7 @@
 
 <script>
 
-import axios from "axios";
+import service from "../utils/request.ts";
 import router from "../router/index.ts";
 
 export default {
@@ -72,19 +144,39 @@ export default {
       staff_id: localStorage.getItem('ms_id'),
       password: localStorage.getItem('ms_password'),
       input_earlypsw: '',
+      fileListAvatar: [],
+
+      info_edit: {
+        email: localStorage.getItem('ms_email'),
+        phoneNumber: localStorage.getItem('ms_phoneNumber'),
+        address: localStorage.getItem('ms_address'),
+        postCode: localStorage.getItem('ms_postCode'),
+        emergency_Contact: localStorage.getItem('ms_emergency'),
+        id: localStorage.getItem('ms_id')
+      },
 
       formPsw: {
         password: '',
         id: localStorage.getItem('ms_id')
-      }
+      },
+
+      avatar_change: {
+        avatar: localStorage.getItem('ms_avatar'),
+        id: localStorage.getItem('ms_id')
+
+      },
+
+      avatar_change_dialog: false
     }
   },
 
   methods: {
+
+
       onSubmitPassword:function() {
 
         if (this.input_earlypsw === this.password){
-          axios.put('api/staffpage/edit', this.formPsw)
+          service.put('api/staffpage/edit', this.formPsw)
               .then((res) => res.data.msg === "success"?
                   this.$message({
                     message: "Password Changed Successfully",
@@ -104,7 +196,59 @@ export default {
         }
 
         router.push("/login")
-      }
+      },
+
+    onSubmitPersonalInfo(){
+        service.put('api/staffpage/edit', this.info_edit).then((res) => {
+          if (res.data.msg === 'success'){
+            this.$message({
+              type: 'success',
+              message: 'Edit successfully'
+            });
+            router.push('/login')
+          }
+          else{
+            this.$message.error("Error when editing, please contact IT service")
+          }
+        })
+    },
+    handleRemoveAvatar(){
+
+        this.avatar_change.avatar = '';
+        this.fileListAvatar = [];
+
+    },
+
+    handlePreviewAvatar(){
+
+    },
+
+    handleExceedAvatar(){
+      this.$message.warning("Please first delete the photo you uploaded previously!")
+    },
+    handleSuccessAvatar(response, file){
+      this.avatar_change.avatar = response.data;
+      this.fileListAvatar.push(file)
+
+    },
+
+    onSubmitAvatar(){
+
+        service.put('api/staffpage/edit', this.avatar_change).then((res) => {
+          if (res.data.msg === 'success'){
+            this.$message({
+              type: 'success',
+              message: 'Changed successfully'
+            });
+            localStorage.setItem('ms_avatar', this.avatar_change.avatar);
+            location.reload();
+          }
+          else{
+            this.$message.error("Error when editing, please contact IT service")
+          }
+
+        })
+    }
   }
 }
 

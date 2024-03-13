@@ -30,6 +30,25 @@ const routes: RouteRecordRaw[] = [
                 },
                 component: () => import(/* webpackChunkName: "table" */ '../views/table.vue'),
             },
+
+            {
+                path: '/staff_table',
+                name: 'staff_table',
+                meta: {
+                    title: 'Staff Table',
+                    permiss: '2'
+                },
+                component : () => import('../views/staff_table.vue')
+            },
+            {
+                path: '/new_staff',
+                name: 'new_staff',
+                meta:{
+                    title: 'New Staff',
+                    permiss: '2'
+                },
+                component: () => import('../views/new_staff.vue')
+            },
             {
                 path: '/charts',
                 name: 'basecharts',
